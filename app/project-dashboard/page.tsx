@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import ProjectGrid from '@/components/project/ProjectGrid'
 import ProjectDetailView from '@/components/project/ProjectDetailView'
 import CrossProjectOperations from '@/components/project/CrossProjectOperations'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -161,6 +162,7 @@ export default function ProjectDashboard() {
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
+              <ThemeToggle />
             </div>
           </div>
         </div>
