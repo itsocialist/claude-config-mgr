@@ -1,0 +1,17 @@
+          <TabsContent value="memory" className="space-y-4">
+            <ConfigTab
+              configData={configData}
+              selectedConfig={selectedConfig}
+              editingConfig={editingConfig}
+              configContent={configContent}
+              onSelectConfig={selectConfigFile}
+              onEditConfig={() => setEditingConfig(true)}
+              onSaveConfig={saveConfigFile}
+              onCancelEdit={() => {
+                setEditingConfig(false)
+                setConfigContent(selectedConfig?.content || '')
+              }}
+              onContentChange={setConfigContent}
+              loading={loading}
+            />
+          </TabsContent>

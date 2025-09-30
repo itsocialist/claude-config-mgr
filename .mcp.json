@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "ship-ape": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/briandawson/workspace/shape-core/dist/index.js"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "type": "local",
+      "source": "user",
+      "name": "fetch"
+    }
+  }
+}
