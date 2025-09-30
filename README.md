@@ -21,6 +21,7 @@ A modern, project-centric configuration management tool for Claude Desktop and C
 - **Batch Updates**: Apply changes across multiple projects
 
 ### 🎨 Modern UI/UX
+- **Dark Mode**: Full dark mode support with system theme detection
 - **Grid & List Views**: Choose your preferred layout
 - **Search & Filter**: Quickly find projects by name or features
 - **Monaco Editor**: Professional code editing experience
