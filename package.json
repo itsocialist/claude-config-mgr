@@ -2,63 +2,21 @@
   "name": "claude-config-mgr",
   "version": "0.2.0",
   "description": "Configuration manager for Claude Desktop and Claude Code",
-  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "electron": "node electron-start.js",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && node electron-start.js\"",
-    "electron:build": "next build && electron-builder",
-    "electron:dist": "npm run build && electron-builder --mac --win --linux"
+    "start": "next start -p 3002",
+    "lint": "next lint"
   },
   "keywords": [
     "claude",
     "configuration",
     "management",
-    "electron",
-    "desktop"
+    "web",
+    "dashboard"
   ],
   "author": "",
   "license": "MIT",
-  "build": {
-    "appId": "com.claudeconfig.manager",
-    "productName": "Claude Config Manager",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "electron/**/*",
-      ".next/**/*",
-      "public/**/*",
-      "node_modules/**/*",
-      "package.json"
-    ],
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "public/icon.icns"
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "public/icon.ico"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Development",
-      "icon": "public/icon.png"
-    }
-  },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
@@ -93,15 +51,10 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
-    "electron": "^38.2.0",
-    "electron-builder": "^26.0.12",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5",
-    "wait-on": "^9.0.1"
+    "typescript": "^5"
   }
 }
