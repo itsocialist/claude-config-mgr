@@ -1,5 +1,9 @@
 # Claude Config Manager
 
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/yourusername/claude-config-mgr)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black.svg)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A modern, project-centric configuration management tool for Claude Desktop and Claude Code. Easily browse, edit, and manage Claude configurations across all your projects from a unified interface.
 
 ## Features
@@ -8,24 +12,34 @@ A modern, project-centric configuration management tool for Claude Desktop and C
 - **Unified Dashboard**: View all projects with Claude configurations in one place
 - **Quick Navigation**: Switch between projects instantly with the project selector
 - **Smart Discovery**: Automatically finds `.claude` directories, `CLAUDE.md` files, agents, and MCP servers
+- **Statistics Dashboard**: Real-time stats showing projects with Memory, Agents, and MCP servers
 
 ### 📝 Configuration Management
 - **CLAUDE.md Editor**: Edit project instructions with syntax highlighting
 - **Settings Management**: Manage JSON configuration files with validation
 - **Agent Support**: View and edit project-level and global agents
-- **MCP Server Configuration**: Configure Model Context Protocol servers
+- **MCP Server Configuration**: Configure Model Context Protocol servers (.mcp.json)
+- **Clipboard Support**: Copy configuration content to system clipboard with one click
 
 ### 🔄 Cross-Project Operations
-- **Copy Configurations**: Copy settings, agents, or instructions between projects
-- **Compare Projects**: Compare configurations side-by-side
-- **Batch Updates**: Apply changes across multiple projects
+- **Copy Configurations**: Modal-based interface to copy settings between projects
+- **Compare Projects**: Visual comparison showing configuration differences
+- **Selective Copy**: Choose specific configuration types to copy (Memory, Settings, Agents, MCP, Hooks)
 
 ### 🎨 Modern UI/UX
 - **Dark Mode**: Full dark mode support with system theme detection
-- **Grid & List Views**: Choose your preferred layout
-- **Search & Filter**: Quickly find projects by name or features
+- **Grid & List Views**: Choose your preferred layout with instant switching
+- **Advanced Search & Filter**: Filter by configuration features (Memory, MCP, Agents)
 - **Monaco Editor**: Professional code editing experience
+- **Sticky Headers**: Navigation stays accessible while scrolling
+- **Toast Notifications**: Status bar with real-time feedback
+- **Gradient Cards**: Beautiful gradient styling for stat cards
 - **Responsive Design**: Works on desktop and tablet screens
+
+### 🖥️ Desktop Application
+- **Electron Support**: Run as a native desktop application
+- **macOS Optimized**: Full support for macOS including dark mode
+- **Settings Page**: Configure Electron app preferences
 
 ## Installation
 
@@ -37,11 +51,15 @@ cd claude-config-mgr
 # Install dependencies
 npm install
 
-# Run development server
+# Run development server (web)
 npm run dev
+
+# Run as Electron desktop app
+npm run electron:dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to access the application.
+Open [http://localhost:3002](http://localhost:3002) to access the web application.
+Or run as a native desktop app with Electron.
 
 ## Usage
 
@@ -124,6 +142,20 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License - see LICENSE file for details
+
+## Recent Changes (v0.3.0)
+
+- ✨ Added Copy To and Compare configuration modals
+- 📋 Implemented system clipboard copy functionality
+- 🐛 Fixed sticky header gap issues in dashboard
+- ⚙️ Added settings page with Electron configurations
+- 🔔 Added StatusBar component with toast notifications
+- 🔍 Added ProjectSearchBar component for better filtering
+- 📁 Fixed MCP file location to save in project root (.mcp.json)
+- 🏷️ Fixed project name detection for hidden directories
+- 🌙 Improved dark mode support across components
+- 🎨 Added gradient styling to stat cards
+- ✅ Added checkbox and label UI components
 
 ## Support
 
