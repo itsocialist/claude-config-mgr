@@ -1,4 +1,4 @@
-// Minimal Electron main process
+// Electron main process - Fixed for CSS loading
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
@@ -10,14 +10,31 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: true // Re-enabled for security
     }
   });
 
-  // Load the Next.js dev server
+  // Load the Next.js dev server - project dashboard
   mainWindow.loadURL('http://localhost:3002/project-dashboard');
+
+  // Wait for page to fully load before showing
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Page loaded, waiting for CSS...');
+    // Give CSS time to inject
+    setTimeout(() => {
+      mainWindow.show();
+      console.log('Window shown');
+    }, 1000);
+  });
+
+  // Handle loading errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorDescription);
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;

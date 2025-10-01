@@ -1,9 +1,12 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import ProjectGrid from '@/components/project/ProjectGrid'
 import ProjectDetailView from '@/components/project/ProjectDetailView'
+import ProjectSearchBar from '@/components/project/ProjectSearchBar'
 import CrossProjectOperations from '@/components/project/CrossProjectOperations'
+import CopyConfigModal from '@/components/project/CopyConfigModal'
+import CompareConfigModal from '@/components/project/CompareConfigModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +36,45 @@ export default function ProjectDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'grid' | 'detail'>('grid')
+
+  // Modal states
+  const [copyModalOpen, setCopyModalOpen] = useState(false)
+  const [compareModalOpen, setCompareModalOpen] = useState(false)
+
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [filters, setFilters] = useState({
+    hasClaudeMd: false,
+    hasMCP: false,
+    hasAgents: false
+  })
+
+  // Filter and sort projects
+  const filteredProjects = useMemo(() => {
+    let filtered = projects.filter(project => {
+      // Search filter
+      if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false
+      }
+
+      // Feature filters
+      if (filters.hasClaudeMd && !project.claudeMd) return false
+      if (filters.hasMCP && (!project.mcpServers || project.mcpServers.length === 0)) return false
+      if (filters.hasAgents && (!project.agents || project.agents.length === 0)) return false
+
+      return true
+    })
+
+    // Sort
+    filtered.sort((a, b) => {
+      const comparison = a.name.localeCompare(b.name)
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+
+    return filtered
+  }, [projects, searchTerm, sortOrder, filters])
 
   useEffect(() => {
     fetchConfigData()
@@ -103,39 +145,59 @@ export default function ProjectDashboard() {
     }
   }
 
-  const handleCopyConfig = async (source: Project, targetName: string, configTypes: string[]) => {
-    // Find target project
-    const target = projects.find(p => p.name === targetName)
-    if (!target) throw new Error('Target project not found')
+  const handleCopyConfig = async (targetName: string, configTypes: string[]) => {
+    try {
+      // Find target project
+      const target = projects.find(p => p.name === targetName)
+      if (!target) {
+        console.error('Target project not found:', targetName)
+        alert('Target project not found')
+        return
+      }
 
-    // Implementation would copy selected config types from source to target
-    console.log('Copying configs from', source.name, 'to', targetName, 'types:', configTypes)
+      // Implementation would copy selected config types from source to target
+      console.log('Copying configs from', selectedProject?.name, 'to', targetName, 'types:', configTypes)
 
-    // This would call appropriate API endpoints to copy files
-    // For now, just refresh data
-    await fetchConfigData()
+      // TODO: Implement actual copy logic via API
+      // This would call appropriate API endpoints to copy files
+
+      // For now, show success message
+      alert(`Configuration will be copied to ${targetName}\n(Feature implementation in progress)`)
+
+      // Refresh data
+      await fetchConfigData()
+    } catch (error) {
+      console.error('Failed to copy config:', error)
+      alert('Failed to copy configuration')
+    }
   }
 
   const handleCompareProjects = (project1: string, project2: string) => {
     // Implementation would open comparison view
     console.log('Comparing', project1, 'with', project2)
+
+    // For now, show a message that detailed comparison is coming soon
+    alert(`Detailed comparison between ${project1} and ${project2} will be available soon`)
+
+    // Close the modal
+    setCompareModalOpen(false)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+        <div className="container mx-auto px-6 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Database className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Database className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Claude Config Manager
                 </h1>
-                <p className="text-slate-600 dark:text-slate-400 text-lg">
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
                   Project-Centric Configuration Management
                 </p>
               </div>
@@ -166,70 +228,89 @@ export default function ProjectDashboard() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Stats */}
-        {view === 'grid' && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Projects</p>
-                  <p className="text-2xl font-bold">{loading ? '...' : projects.length}</p>
+      {/* Stats and Search Section - Sticky for grid view */}
+      {view === 'grid' && (
+        <div className="sticky top-[73px] z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
+          {/* Stats Section */}
+          <div className="container mx-auto px-6 py-4 max-w-7xl">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-blue-600 dark:text-blue-400">Total Projects</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{loading ? '...' : projects.length}</p>
+                  </div>
+                  <Database className="w-8 h-8 text-blue-500 opacity-50" />
                 </div>
-                <Database className="w-8 h-8 text-blue-500 opacity-50" />
               </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">With CLAUDE.md</p>
-                  <p className="text-2xl font-bold">
-                    {projects.filter(p => p.claudeMd).length}
-                  </p>
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-orange-600 dark:text-orange-400">With Memory</p>
+                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
+                      {projects.filter(p => p.claudeMd).length}
+                    </p>
+                  </div>
+                  <Settings className="w-8 h-8 text-orange-500 opacity-50" />
                 </div>
-                <Settings className="w-8 h-8 text-orange-500 opacity-50" />
               </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">With Agents</p>
-                  <p className="text-2xl font-bold">
-                    {projects.filter(p => p.agents?.length > 0).length}
-                  </p>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-purple-600 dark:text-purple-400">With Agents</p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      {projects.filter(p => p.agents?.length > 0).length}
+                    </p>
+                  </div>
+                  <Shield className="w-8 h-8 text-purple-500 opacity-50" />
                 </div>
-                <Shield className="w-8 h-8 text-purple-500 opacity-50" />
               </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">MCP Servers</p>
-                  <p className="text-2xl font-bold">
-                    {projects.reduce((sum, p) => sum + (p.mcpServers?.length || 0), 0)}
-                  </p>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-600 dark:text-green-400">MCP Servers</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      {projects.reduce((sum, p) => sum + (p.mcpServers?.length || 0), 0)}
+                    </p>
+                  </div>
+                  <Database className="w-8 h-8 text-green-500 opacity-50" />
                 </div>
-                <Database className="w-8 h-8 text-green-500 opacity-50" />
               </div>
             </div>
           </div>
-        )}
+          {/* Search and Filter Bar */}
+          <div className="border-t border-slate-200 dark:border-slate-700">
+            <div className="container mx-auto px-6 py-3 max-w-7xl">
+              <ProjectSearchBar
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                sortOrder={sortOrder}
+                onSortChange={setSortOrder}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                filters={filters}
+                onFiltersChange={setFilters}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container mx-auto p-6 max-w-7xl">
 
         {/* Main Content */}
         {view === 'grid' ? (
           <ProjectGrid
-            projects={projects}
+            projects={filteredProjects}
             onSelectProject={handleProjectSelect}
             globalConfig={globalConfig}
+            viewMode={viewMode}
+            hideSearchBar
           />
         ) : selectedProject ? (
-          <div className="space-y-6">
-            <CrossProjectOperations
-              sourceProject={selectedProject}
-              projects={projects}
-              onCopyConfig={handleCopyConfig}
-              onCompareProjects={handleCompareProjects}
-            />
+          <div className="h-[calc(100vh-120px)]">
             <ProjectDetailView
               project={selectedProject}
               isGlobal={selectedProject.name === "Global Configuration"}
@@ -238,18 +319,32 @@ export default function ProjectDashboard() {
                 setSelectedProject(null)
               }}
               onSave={handleSaveConfig}
-              onCopyTo={(targetProject) => {
-                // Open copy dialog
-                console.log('Copy to', targetProject)
-              }}
-              onCompare={() => {
-                // Open compare dialog
-                console.log('Compare project')
-              }}
+              onCopyTo={() => setCopyModalOpen(true)}
+              onCompare={() => setCompareModalOpen(true)}
             />
           </div>
         ) : null}
       </div>
+
+      {/* Modals */}
+      {selectedProject && (
+        <>
+          <CopyConfigModal
+            isOpen={copyModalOpen}
+            onClose={() => setCopyModalOpen(false)}
+            sourceProject={selectedProject}
+            targetProjects={projects}
+            onConfirm={handleCopyConfig}
+          />
+          <CompareConfigModal
+            isOpen={compareModalOpen}
+            onClose={() => setCompareModalOpen(false)}
+            sourceProject={selectedProject}
+            targetProjects={projects}
+            onConfirm={(targetName) => handleCompareProjects(selectedProject.name, targetName)}
+          />
+        </>
+      )}
     </div>
   )
 }

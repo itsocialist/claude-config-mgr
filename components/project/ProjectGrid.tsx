@@ -13,7 +13,11 @@ import {
   SortAsc,
   SortDesc,
   Filter,
-  Plus
+  Plus,
+  Shield,
+  FileText,
+  Settings,
+  Brain
 } from "lucide-react"
 
 interface Project {
@@ -31,15 +35,22 @@ interface ProjectGridProps {
   onSelectProject: (project: Project) => void
   onCreateProject?: () => void
   globalConfig?: any
+  viewMode?: 'grid' | 'list'
+  hideSearchBar?: boolean
 }
 
 export default function ProjectGrid({
   projects,
   onSelectProject,
   onCreateProject,
-  globalConfig
+  globalConfig,
+  viewMode: externalViewMode,
+  hideSearchBar = false
 }: ProjectGridProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  // Use external view mode if provided, otherwise manage internally
+  const [internalViewMode, setInternalViewMode] = useState<'grid' | 'list'>('grid')
+  const viewMode = externalViewMode || internalViewMode
+
   const [searchTerm, setSearchTerm] = useState('')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [filters, setFilters] = useState({
@@ -48,8 +59,12 @@ export default function ProjectGrid({
     hasAgents: false
   })
 
-  // Filter and sort projects
+  // Use passed projects directly if search bar is hidden (already filtered)
   const filteredProjects = useMemo(() => {
+    if (hideSearchBar) {
+      return projects
+    }
+
     let filtered = projects.filter(project => {
       // Search filter
       if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -71,31 +86,32 @@ export default function ProjectGrid({
     })
 
     return filtered
-  }, [projects, searchTerm, sortOrder, filters])
+  }, [projects, searchTerm, sortOrder, filters, hideSearchBar])
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search projects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      {/* Header Controls - only show if not hidden */}
+      {!hideSearchBar && (
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        {/* Filters */}
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant={filters.hasClaudeMd ? "default" : "outline"}
-            onClick={() => setFilters(f => ({ ...f, hasClaudeMd: !f.hasClaudeMd }))}
+          {/* Filters */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={filters.hasClaudeMd ? "default" : "outline"}
+              onClick={() => setFilters(f => ({ ...f, hasClaudeMd: !f.hasClaudeMd }))}
           >
-            CLAUDE.md
+            Memory
           </Button>
           <Button
             size="sm"
@@ -113,53 +129,83 @@ export default function ProjectGrid({
           </Button>
         </div>
 
-        {/* View Controls */}
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-          >
-            {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'grid' ? "default" : "outline"}
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid3x3 className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'list' ? "default" : "outline"}
-            onClick={() => setViewMode('list')}
-          >
-            <List className="w-4 h-4" />
-          </Button>
+          {/* View Controls */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+            >
+              {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'grid' ? "default" : "outline"}
+              onClick={() => setInternalViewMode('grid')}
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'list' ? "default" : "outline"}
+              onClick={() => setInternalViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Global Config Card */}
+      {/* Global Config Card - Compact Design */}
       {globalConfig && (
-        <Card className="border-2 border-blue-500 bg-blue-50 dark:bg-blue-950">
-          <ProjectCard
-            project={{
-              name: "Global Configuration",
-              path: "~/.claude",
-              claudeMd: globalConfig.claudeMd,
-              settings: globalConfig.settings || [],
-              agents: globalConfig.agents || [],
-              hooks: [],
-              mcpServers: []
-            }}
-            isGlobal={true}
-            onClick={() => onSelectProject({
-              name: "Global",
-              path: "~/.claude",
-              ...globalConfig
-            })}
-            viewMode={viewMode}
-          />
+        <Card
+          className="border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 cursor-pointer hover:shadow-lg transition-all"
+          onClick={() => onSelectProject({
+            name: "Global",
+            path: "~/.claude",
+            ...globalConfig
+          })}
+        >
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Global Configuration</h3>
+                  <p className="text-xs text-gray-500">~/.claude</p>
+                </div>
+              </div>
+              <Badge className="bg-blue-500">Global</Badge>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-4">
+                {globalConfig.claudeMd && (
+                  <div className="flex items-center gap-1">
+                    <FileText className="w-4 h-4 text-orange-500" />
+                    <span>Memory</span>
+                  </div>
+                )}
+                {globalConfig.settings?.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Settings className="w-4 h-4 text-blue-500" />
+                    <span>{globalConfig.settings.length} Settings</span>
+                  </div>
+                )}
+                {globalConfig.agents?.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Brain className="w-4 h-4 text-purple-500" />
+                    <span>{globalConfig.agents.length} Agents</span>
+                  </div>
+                )}
+              </div>
+              <div className="text-xs text-gray-500">
+                Total: {(globalConfig.settings?.length || 0) + (globalConfig.agents?.length || 0) + (globalConfig.claudeMd ? 1 : 0)} files
+              </div>
+            </div>
+          </div>
         </Card>
       )}
 

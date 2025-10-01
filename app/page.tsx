@@ -183,7 +183,7 @@ export default function Dashboard() {
         setClaudeMdContent(data.content)
       }
     } catch (error) {
-      console.error("Failed to load CLAUDE.md:", error)
+      console.error("Failed to load Memory file:", error)
     }
   }
 
@@ -204,10 +204,10 @@ export default function Dashboard() {
       if (res.ok) {
         setEditingClaudeMd(false)
         await fetchClaudeData()
-        alert("CLAUDE.md saved successfully!")
+        alert("Memory file saved successfully!")
       }
     } catch (error) {
-      console.error("Failed to save CLAUDE.md:", error)
+      console.error("Failed to save Memory file:", error)
     }
     setLoading(false)
   }
@@ -315,22 +315,26 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Settings className="w-6 h-6 text-white" />
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+        <div className="container mx-auto px-6 py-4 max-w-7xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <Settings className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Claude Config Manager
               </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-lg">
+              <p className="text-slate-600 dark:text-slate-400 text-sm">
                 Unified management for Claude Desktop, Claude Code, and memory systems
               </p>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="container mx-auto p-6 max-w-7xl">
 
         {status && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -475,7 +479,7 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="claude-md" className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">CLAUDE.md</span>
+              <span className="hidden sm:inline">Memory</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-slate-500 data-[state=active]:text-white">
               <Settings className="w-4 h-4" />
@@ -832,10 +836,10 @@ export default function Dashboard() {
                 <CardHeader className="flex-shrink-0 pb-4">
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    CLAUDE.md Files
+                    Memory Files
                   </CardTitle>
                   <CardDescription>
-                    Global and project-specific instructions
+                    Global and project-specific memory instructions
                   </CardDescription>
 
                   {/* Search and Sort Controls */}
@@ -861,7 +865,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto space-y-4 min-h-0">
                   <div className="space-y-2">
-                    {/* Global CLAUDE.md */}
+                    {/* Global Memory */}
                     {configData?.global?.claudeMd && (
                       <div
                         className={`p-3 border rounded cursor-pointer transition-colors ${
@@ -877,7 +881,7 @@ export default function Dashboard() {
                       >
                         <div className="flex items-center gap-2">
                           <Settings className="w-4 h-4" />
-                          <span className="font-medium">Global CLAUDE.md</span>
+                          <span className="font-medium">Global Memory</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {new Date(configData.global.claudeMd.lastModified).toLocaleString()}
@@ -885,7 +889,7 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    {/* Project CLAUDE.md files */}
+                    {/* Project Memory files */}
                     {(() => {
                       const projectsWithClaudeMd = configData?.projects?.filter((project: any) => {
                         return project.claudeMd && project.name.toLowerCase().includes(claudeMdSearchTerm.toLowerCase())
@@ -924,7 +928,7 @@ export default function Dashboard() {
                     {/* Show project count and available projects */}
                     <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
                       Total projects: {configData?.projects?.length || 0}<br/>
-                      Projects with CLAUDE.md: {configData?.projects?.filter((p: any) => p.claudeMd).length || 0}<br/>
+                      Projects with Memory: {configData?.projects?.filter((p: any) => p.claudeMd).length || 0}<br/>
                       Filtered results: {configData?.projects?.filter((p: any) => p.claudeMd && p.name.toLowerCase().includes(claudeMdSearchTerm.toLowerCase())).length || 0}
                     </div>
 
@@ -932,7 +936,7 @@ export default function Dashboard() {
                       (!configData?.projects || configData.projects.filter((p: any) => p.claudeMd).length === 0)) && (
                       <div className="text-center py-8 text-gray-500">
                         <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p>No CLAUDE.md files found</p>
+                        <p>No Memory files found</p>
                         <Button
                           size="sm"
                           variant="outline"
@@ -940,7 +944,7 @@ export default function Dashboard() {
                           onClick={() => loadClaudeMd('global')}
                         >
                           <Plus className="w-4 h-4 mr-1" />
-                          Create Global CLAUDE.md
+                          Create Global Memory
                         </Button>
                       </div>
                     )}
@@ -1035,7 +1039,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-center h-full text-gray-500">
                       <div className="text-center">
                         <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Select a CLAUDE.md file to view or edit</p>
+                        <p className="text-lg font-medium">Select a Memory file to view or edit</p>
                         <p className="text-sm">Choose from the list on the left</p>
                       </div>
                     </div>

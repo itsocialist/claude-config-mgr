@@ -71,7 +71,7 @@ export default function ProjectCard({
             {stats.claudeMd && (
               <div className="flex items-center gap-1">
                 <FileText className="w-4 h-4 text-orange-500" />
-                <span className="text-sm">CLAUDE.md</span>
+                <span className="text-sm">Memory</span>
               </div>
             )}
 
@@ -98,7 +98,7 @@ export default function ProjectCard({
     )
   }
 
-  // Grid view
+  // Grid view - Compact Design
   return (
     <Card
       className={`cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 ${
@@ -106,52 +106,50 @@ export default function ProjectCard({
       }`}
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className={`p-2 rounded-lg ${
-            isGlobal ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'
-          }`}>
-            {isGlobal ? <Shield className="w-5 h-5 text-blue-600" /> : <Folder className="w-5 h-5" />}
+      <div className="p-4">
+        {/* Header with icon inline with title */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+              isGlobal ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'
+            }`}>
+              {isGlobal ? <Shield className="w-4 h-4 text-blue-600" /> : <Folder className="w-4 h-4" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm line-clamp-1">{project.name}</h3>
+              <p className="text-xs text-gray-500 line-clamp-1">{project.path}</p>
+            </div>
           </div>
           {isGlobal && (
-            <Badge className="bg-blue-500">Global</Badge>
+            <Badge className="bg-blue-500 text-xs ml-2">Global</Badge>
           )}
         </div>
-        <CardTitle className="text-base mt-3 line-clamp-1">{project.name}</CardTitle>
-        <p className="text-xs text-gray-500 line-clamp-1">{project.path}</p>
-      </CardHeader>
 
-      <CardContent>
-        <div className="space-y-3">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2">
-              <FileText className={`w-4 h-4 ${stats.claudeMd ? 'text-orange-500' : 'text-gray-300'}`} />
-              <span className="text-xs">CLAUDE.md</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Server className={`w-4 h-4 ${stats.mcpServers > 0 ? 'text-green-500' : 'text-gray-300'}`} />
-              <span className="text-xs">{stats.mcpServers} MCP</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Brain className={`w-4 h-4 ${stats.agents > 0 ? 'text-purple-500' : 'text-gray-300'}`} />
-              <span className="text-xs">{stats.agents} Agents</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Settings className={`w-4 h-4 ${stats.settings > 0 ? 'text-blue-500' : 'text-gray-300'}`} />
-              <span className="text-xs">{stats.settings} Settings</span>
-            </div>
+        {/* Compact stats in single row */}
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-3">
+            {stats.claudeMd && (
+              <div className="flex items-center gap-1">
+                <FileText className="w-3 h-3 text-orange-500" />
+                <span>Memory</span>
+              </div>
+            )}
+            {stats.mcpServers > 0 && (
+              <div className="flex items-center gap-1">
+                <Server className="w-3 h-3 text-green-500" />
+                <span>{stats.mcpServers}</span>
+              </div>
+            )}
+            {stats.agents > 0 && (
+              <div className="flex items-center gap-1">
+                <Brain className="w-3 h-3 text-purple-500" />
+                <span>{stats.agents}</span>
+              </div>
+            )}
           </div>
-
-          {/* File Count Badge */}
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">Total Files</span>
-              <Badge variant="secondary">{totalFiles}</Badge>
-            </div>
-          </div>
+          <span className="text-gray-500">{totalFiles} files</span>
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 }

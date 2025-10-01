@@ -88,7 +88,17 @@ export async function GET() {
 
       for (const projectClaudeDir of projectDirs) {
         const projectPath = path.dirname(projectClaudeDir)
-        const projectName = path.basename(projectPath)
+        let projectName = path.basename(projectPath)
+
+        // Avoid using hidden directories as project names
+        if (projectName.startsWith('.')) {
+          // Try to use parent directory name
+          const parentPath = path.dirname(projectPath)
+          const parentName = path.basename(parentPath)
+          if (parentName && !parentName.startsWith('.')) {
+            projectName = parentName
+          }
+        }
 
         const project: any = {
           name: projectName,
@@ -199,7 +209,17 @@ export async function GET() {
 
       for (const mcpPath of mcpFiles) {
         const projectPath = path.dirname(mcpPath)
-        const projectName = path.basename(projectPath)
+        let projectName = path.basename(projectPath)
+
+        // Avoid using hidden directories as project names
+        if (projectName.startsWith('.')) {
+          // Try to use parent directory name
+          const parentPath = path.dirname(projectPath)
+          const parentName = path.basename(parentPath)
+          if (parentName && !parentName.startsWith('.')) {
+            projectName = parentName
+          }
+        }
 
         // Check if we already have this project
         let project = configData.projects.find(p => p.path === projectPath)
@@ -239,7 +259,17 @@ export async function GET() {
 
       for (const claudeMdPath of claudeMdFiles) {
         const projectPath = path.dirname(claudeMdPath)
-        const projectName = path.basename(projectPath)
+        let projectName = path.basename(projectPath)
+
+        // Avoid using hidden directories as project names
+        if (projectName.startsWith('.')) {
+          // Try to use parent directory name
+          const parentPath = path.dirname(projectPath)
+          const parentName = path.basename(parentPath)
+          if (parentName && !parentName.startsWith('.')) {
+            projectName = parentName
+          }
+        }
 
         // Skip if we already have this project from .claude directory search
         let existingProject = configData.projects.find(p => p.path === projectPath)
@@ -284,7 +314,17 @@ export async function GET() {
         // Pattern: /path/to/project/agents/agent.md -> /path/to/project
         const agentsDir = path.dirname(agentPath)
         const projectPath = path.dirname(agentsDir)
-        const projectName = path.basename(projectPath)
+        let projectName = path.basename(projectPath)
+
+        // Avoid using hidden directories as project names
+        if (projectName.startsWith('.')) {
+          // Try to use parent directory name
+          const parentPath = path.dirname(projectPath)
+          const parentName = path.basename(parentPath)
+          if (parentName && !parentName.startsWith('.')) {
+            projectName = parentName
+          }
+        }
 
         // Skip if this is global agents directory
         if (projectPath === path.join(require('os').homedir(), '.claude')) {
