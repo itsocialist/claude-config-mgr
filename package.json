@@ -1,19 +1,56 @@
 {
   "name": "claude-config-mgr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Configuration manager for Claude Desktop and Claude Code",
+  "main": "main.js",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
-    "lint": "next lint"
+    "lint": "next lint",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && electron .\"",
+    "electron:build": "next build && electron-builder",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "build": {
+    "appId": "com.claudeconfig.manager",
+    "productName": "Claude Config Manager",
+    "files": [
+      "electron.js",
+      "preload.js",
+      ".next/**/*",
+      "public/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    }
   },
   "keywords": [
     "claude",
     "configuration",
     "management",
-    "web",
-    "dashboard"
+    "electron",
+    "desktop"
   ],
   "author": "",
   "license": "MIT",
@@ -34,6 +71,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "commander": "^11.1.0",
+    "electron-is-dev": "^3.0.1",
+    "electron-squirrel-startup": "^1.0.1",
     "joi": "^17.11.0",
     "js-yaml": "^4.1.0",
     "lucide-react": "^0.293.0",
@@ -46,15 +85,26 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.9.0",
+    "@electron-forge/maker-deb": "^7.9.0",
+    "@electron-forge/maker-rpm": "^7.9.0",
+    "@electron-forge/maker-squirrel": "^7.9.0",
+    "@electron-forge/maker-zip": "^7.9.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
+    "@electron-forge/plugin-fuses": "^7.9.0",
+    "@electron/fuses": "^1.8.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "concurrently": "^9.2.1",
+    "electron": "^27.3.11",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.1"
   }
 }
