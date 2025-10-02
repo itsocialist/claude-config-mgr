@@ -133,7 +133,19 @@ export default function ProjectDetailView({
       case 'instructions':
         fileName = 'CLAUDE.md'
         defaultContent = '# Claude Configuration\n\n'
-        filePath = `${project.path}/.claude/${fileName}`
+        // Check if project already has a CLAUDE.md and use the same location pattern
+        if (project.claudeMd?.path) {
+          // If existing CLAUDE.md is in project root (not in .claude subdirectory)
+          if (!project.claudeMd.path.includes('/.claude/')) {
+            filePath = `${project.path}/${fileName}`
+          } else {
+            // Otherwise use .claude directory
+            filePath = `${project.path}/.claude/${fileName}`
+          }
+        } else {
+          // Default to .claude directory for new files
+          filePath = `${project.path}/.claude/${fileName}`
+        }
         break
       case 'settings':
         fileName = 'claude_desktop_config.json'

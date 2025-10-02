@@ -2,7 +2,7 @@
   "name": "claude-config-mgr",
   "version": "0.3.0",
   "description": "Configuration manager for Claude Desktop and Claude Code",
-  "main": "main.js",
+  "main": "electron-simple.js",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
@@ -62,6 +62,7 @@
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.0.3",

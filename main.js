@@ -1,18 +1,6 @@
-// Electron main process - Fixed for CSS loading
-const path = require('path');
-
-// Debug: Check if we're running in Electron
-console.log('Process versions:', process.versions);
-console.log('Electron version:', process.versions.electron);
-
-// Only require electron if we're actually in Electron
-if (!process.versions.electron) {
-  console.error('ERROR: This file must be run with Electron, not Node.js');
-  console.error('Use: npm run electron:dev or npx electron .');
-  process.exit(1);
-}
-
+// Electron main process
 const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
 let mainWindow;
 
