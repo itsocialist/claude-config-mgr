@@ -3,15 +3,12 @@
 ## Active Bugs
 
 ### BUG-001: Electron App Launch Failure
-- **Status**: Open
+- **Status**: Resolved
 - **Severity**: High
 - **Description**: main.js throws "Cannot read properties of undefined (reading 'whenReady')"
-- **Steps to Reproduce**:
-  1. Run `npm run electron:dev`
-  2. App fails to launch
-- **Expected**: App launches successfully
-- **Actual**: TypeError in main.js:44
-- **Assignee**: Developer
+- **Resolution**: Added check for Electron environment, proper error messaging
+- **Resolution Date**: 2024-10-01
+- **Fixed in**: main.js - Added process.versions.electron check
 
 ### BUG-002: Project Names Show as Hidden Directories
 - **Status**: Fixed

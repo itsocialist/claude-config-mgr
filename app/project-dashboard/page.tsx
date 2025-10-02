@@ -155,20 +155,55 @@ export default function ProjectDashboard() {
         return
       }
 
-      // Implementation would copy selected config types from source to target
-      console.log('Copying configs from', selectedProject?.name, 'to', targetName, 'types:', configTypes)
+      if (!selectedProject) {
+        console.error('No source project selected')
+        alert('No source project selected')
+        return
+      }
 
-      // TODO: Implement actual copy logic via API
-      // This would call appropriate API endpoints to copy files
+      // Call the copy API
+      const response = await fetch('/api/copy-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sourcePath: selectedProject.path,
+          targetPath: target.path,
+          configTypes
+        })
+      })
 
-      // For now, show success message
-      alert(`Configuration will be copied to ${targetName}\n(Feature implementation in progress)`)
+      const result = await response.json()
 
-      // Refresh data
-      await fetchConfigData()
+      if (response.ok) {
+        // Show success message with details
+        const successCount = result.results.success.length
+        const failedCount = result.results.failed.length
+        const skippedCount = result.results.skipped.length
+
+        let message = `Configuration copied to ${targetName}!\n\n`
+        message += `✅ Success: ${successCount} files\n`
+        if (failedCount > 0) {
+          message += `❌ Failed: ${failedCount} files\n`
+        }
+        if (skippedCount > 0) {
+          message += `⏭️ Skipped: ${skippedCount} files (not found)\n`
+        }
+
+        alert(message)
+
+        // Refresh data to show updated configurations
+        await fetchConfigData()
+
+        // Close the modal
+        setCopyModalOpen(false)
+      } else {
+        throw new Error(result.error || 'Copy operation failed')
+      }
     } catch (error) {
       console.error('Failed to copy config:', error)
-      alert('Failed to copy configuration')
+      alert(`Failed to copy configuration: ${error.message}`)
     }
   }
 
