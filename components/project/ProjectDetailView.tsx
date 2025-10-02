@@ -132,19 +132,45 @@ export default function ProjectDetailView({
     switch (activeTab) {
       case 'instructions':
         fileName = 'CLAUDE.md'
-        defaultContent = '# Claude Configuration\n\n'
-        // Check if project already has a CLAUDE.md and use the same location pattern
+        defaultContent = `# Claude Configuration
+
+## Project Overview
+[Brief description of this project]
+
+## Key Conventions
+- Architecture decisions
+- Code style guidelines
+- Important patterns
+
+## Key Files and Commands
+- Core functions
+- Common scripts
+- Custom commands
+
+## Workflow Instructions
+- Development process
+- Branch naming conventions
+- Testing requirements
+
+## Best Practices
+- Code quality standards
+- Error handling approaches
+- Performance considerations
+`
+        // Follow proper CLAUDE.md conventions:
+        // Primary location should be project root for version control
+        // Only use .claude/ for legacy compatibility
         if (project.claudeMd?.path) {
-          // If existing CLAUDE.md is in project root (not in .claude subdirectory)
-          if (!project.claudeMd.path.includes('/.claude/')) {
-            filePath = `${project.path}/${fileName}`
-          } else {
-            // Otherwise use .claude directory
+          // If existing CLAUDE.md is in legacy .claude location, keep it there
+          if (project.claudeMd.path.includes('/.claude/')) {
             filePath = `${project.path}/.claude/${fileName}`
+          } else {
+            // Otherwise use project root (standard location)
+            filePath = `${project.path}/${fileName}`
           }
         } else {
-          // Default to .claude directory for new files
-          filePath = `${project.path}/.claude/${fileName}`
+          // For new files, default to project root (standard location)
+          filePath = `${project.path}/${fileName}`
         }
         break
       case 'settings':

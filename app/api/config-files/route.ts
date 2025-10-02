@@ -110,29 +110,50 @@ export async function GET() {
           agents: []
         }
 
-        // Check for project CLAUDE.md (first in .claude dir, then in project root)
-        let projectClaudeMdPath = path.join(projectClaudeDir, 'CLAUDE.md')
-        if (await fileExists(projectClaudeMdPath)) {
-          const content = await fs.readFile(projectClaudeMdPath, 'utf-8')
-          const stat = await fs.stat(projectClaudeMdPath)
+        // Check for project CLAUDE.md files following the proper convention:
+        // 1. Project scope: CLAUDE.md in project root (primary location)
+        // 2. Local scope: CLAUDE.local.md in project root (personal, ignored by git)
+        // 3. Legacy: .claude/CLAUDE.md (for backward compatibility)
+
+        // Primary location: project root
+        const rootClaudeMdPath = path.join(projectPath, 'CLAUDE.md')
+        if (await fileExists(rootClaudeMdPath)) {
+          const content = await fs.readFile(rootClaudeMdPath, 'utf-8')
+          const stat = await fs.stat(rootClaudeMdPath)
           project.claudeMd = {
-            path: projectClaudeMdPath,
+            path: rootClaudeMdPath,
             content,
             size: stat.size,
-            lastModified: stat.mtime
+            lastModified: stat.mtime,
+            scope: 'project'
           }
         } else {
-          // Also check for CLAUDE.md in project root
-          const rootClaudeMdPath = path.join(projectPath, 'CLAUDE.md')
-          if (await fileExists(rootClaudeMdPath)) {
-            const content = await fs.readFile(rootClaudeMdPath, 'utf-8')
-            const stat = await fs.stat(rootClaudeMdPath)
+          // Legacy location: .claude directory
+          const legacyClaudeMdPath = path.join(projectClaudeDir, 'CLAUDE.md')
+          if (await fileExists(legacyClaudeMdPath)) {
+            const content = await fs.readFile(legacyClaudeMdPath, 'utf-8')
+            const stat = await fs.stat(legacyClaudeMdPath)
             project.claudeMd = {
-              path: rootClaudeMdPath,
+              path: legacyClaudeMdPath,
               content,
               size: stat.size,
-              lastModified: stat.mtime
+              lastModified: stat.mtime,
+              scope: 'legacy'
             }
+          }
+        }
+
+        // Check for local scope CLAUDE.local.md
+        const localClaudeMdPath = path.join(projectPath, 'CLAUDE.local.md')
+        if (await fileExists(localClaudeMdPath)) {
+          const content = await fs.readFile(localClaudeMdPath, 'utf-8')
+          const stat = await fs.stat(localClaudeMdPath)
+          project.claudeLocalMd = {
+            path: localClaudeMdPath,
+            content,
+            size: stat.size,
+            lastModified: stat.mtime,
+            scope: 'local'
           }
         }
 
