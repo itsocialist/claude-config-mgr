@@ -2,6 +2,19 @@
 
 ## Active Bugs
 
+### BUG-004: Incorrect Save Path for CLAUDE.md
+- **Status**: Open
+- **Severity**: High
+- **Description**: CLAUDE.md files are being saved to incorrect locations when creating new files
+- **Current Behavior**: New CLAUDE.md files are created in .claude/ subdirectory
+- **Expected Behavior**: Should follow project's existing pattern (root or .claude/)
+- **Impact**: Breaks project configuration consistency
+- **Steps to Reproduce**:
+  1. Open a project that has CLAUDE.md in root
+  2. Try to create new CLAUDE.md via "Add File"
+  3. File is created in .claude/ instead of root
+- **Assignee**: Developer
+
 ### BUG-001: Electron App Launch Failure
 - **Status**: Resolved
 - **Severity**: High

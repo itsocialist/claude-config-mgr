@@ -7,6 +7,7 @@ import ProjectSearchBar from '@/components/project/ProjectSearchBar'
 import CrossProjectOperations from '@/components/project/CrossProjectOperations'
 import CopyConfigModal from '@/components/project/CopyConfigModal'
 import CompareConfigModal from '@/components/project/CompareConfigModal'
+import DetailedCompareModal from '@/components/project/DetailedCompareModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +41,8 @@ export default function ProjectDashboard() {
   // Modal states
   const [copyModalOpen, setCopyModalOpen] = useState(false)
   const [compareModalOpen, setCompareModalOpen] = useState(false)
+  const [detailedCompareOpen, setDetailedCompareOpen] = useState(false)
+  const [compareTarget, setCompareTarget] = useState<any>(null)
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('')
@@ -207,15 +210,14 @@ export default function ProjectDashboard() {
     }
   }
 
-  const handleCompareProjects = (project1: string, project2: string) => {
-    // Implementation would open comparison view
-    console.log('Comparing', project1, 'with', project2)
-
-    // For now, show a message that detailed comparison is coming soon
-    alert(`Detailed comparison between ${project1} and ${project2} will be available soon`)
-
-    // Close the modal
-    setCompareModalOpen(false)
+  const handleCompareProjects = (targetProjectName: string) => {
+    // Find the target project
+    const target = projects.find(p => p.name === targetProjectName)
+    if (target) {
+      setCompareTarget(target)
+      setCompareModalOpen(false)
+      setDetailedCompareOpen(true)
+    }
   }
 
   return (
@@ -376,7 +378,16 @@ export default function ProjectDashboard() {
             onClose={() => setCompareModalOpen(false)}
             sourceProject={selectedProject}
             targetProjects={projects}
-            onConfirm={(targetName) => handleCompareProjects(selectedProject.name, targetName)}
+            onConfirm={handleCompareProjects}
+          />
+          <DetailedCompareModal
+            isOpen={detailedCompareOpen}
+            onClose={() => {
+              setDetailedCompareOpen(false)
+              setCompareTarget(null)
+            }}
+            project1={selectedProject}
+            project2={compareTarget}
           />
         </>
       )}

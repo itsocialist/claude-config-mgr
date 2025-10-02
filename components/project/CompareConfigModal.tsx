@@ -80,7 +80,6 @@ export default function CompareConfigModal({
   const handleConfirm = () => {
     if (selectedTarget) {
       onConfirm(selectedTarget)
-      onClose()
     }
   }
 
