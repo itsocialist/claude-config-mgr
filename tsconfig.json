@@ -7,11 +7,12 @@
     },
     "module": "ESNext",
     "lib": [
-      "ES2022"
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
     ],
     "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -33,7 +34,11 @@
     ]
   },
   "include": [
-    "src/**/*",
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "stores/**/*",
+    "hooks/**/*",
     ".next/types/**/*.ts"
   ],
   "exclude": [

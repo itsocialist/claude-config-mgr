@@ -1,54 +1,5 @@
 # Claude Configuration Manager - Project Context
 
-## 🎯 Role-Based Context Loading Instructions
-
-When starting a new conversation, specify your role to load the appropriate context:
-
-### For Product Management Tasks:
-```
-"Acting as PM, I need to..."
-Load: .spec/claude-config-mgr.md, .spec/requirements.md, .spec/stories.md, .agents/pm.md
-```
-
-### For Development Tasks:
-```
-"Acting as Developer, I need to..."
-Load: .spec/design.md, .spec/tasks.md, .steering/practices.md, .steering/workflow.md, .agents/developer.md
-Check: .spec/bugs-issues.md for known issues
-```
-
-### For QA/Testing Tasks:
-```
-"Acting as QA, I need to..."
-Load: .spec/bugs-issues.md, .steering/testing.md, .spec/requirements.md, .agents/qa.md
-```
-
-### For Bug Fixes:
-```
-"I need to fix bug..."
-Load: .spec/bugs-issues.md, .spec/tasks.md, .steering/workflow.md
-```
-
-### For Feature Implementation:
-```
-"I need to implement feature..."
-Load: .spec/requirements.md, .spec/stories.md, .spec/tasks.md, .spec/design.md
-Reference: Existing components in components/project/ for patterns
-```
-
-### For Documentation Updates:
-```
-"I need to update documentation..."
-Load: README.md, relevant .spec/ files
-Follow: .steering/rules.md for documentation standards
-```
-
-## 📋 Context Loading Rules
-1. **NEVER load all files** - Use role-based loading above
-2. **Check task status first** - `.spec/tasks.md` shows current priorities
-3. **Reference, don't include** - Mention file paths instead of loading entire contents
-4. **Update after changes** - Keep `.spec/` files current with project state
-
 ## Project Structure
 This is a Next.js 14 application with Electron support for managing Claude configurations.
 
@@ -93,7 +44,7 @@ Check `.spec/tasks.md` for current tasks and priorities.
 
 ## Quick Commands
 ```bash
-npm run dev          # Web development (port 3002)
+npm run dev          # Web development
 npm run electron:dev # Desktop app development
 npm run build        # Production build
 ```

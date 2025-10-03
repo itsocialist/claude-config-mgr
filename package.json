@@ -2,7 +2,7 @@
   "name": "claude-config-mgr",
   "version": "0.3.0",
   "description": "Configuration manager for Claude Desktop and Claude Code",
-  "main": "electron-simple.js",
+  "main": "main.js",
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
@@ -11,39 +11,12 @@
     "electron": "electron .",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && electron .\"",
     "electron:build": "next build && electron-builder",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux",
     "package": "electron-forge package",
     "make": "electron-forge make"
-  },
-  "build": {
-    "appId": "com.claudeconfig.manager",
-    "productName": "Claude Config Manager",
-    "files": [
-      "electron.js",
-      "preload.js",
-      ".next/**/*",
-      "public/**/*",
-      "node_modules/**/*"
-    ],
-    "directories": {
-      "output": "dist"
-    },
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dmg"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "category": "Development"
-    }
   },
   "keywords": [
     "claude",
@@ -77,6 +50,7 @@
     "diff": "^8.0.2",
     "electron-is-dev": "^3.0.1",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-updater": "^6.6.2",
     "joi": "^17.11.0",
     "js-yaml": "^4.1.0",
     "lucide-react": "^0.293.0",
@@ -104,6 +78,7 @@
     "autoprefixer": "^10.0.1",
     "concurrently": "^9.2.1",
     "electron": "^27.3.11",
+    "electron-builder": "^26.0.12",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "postcss": "^8",

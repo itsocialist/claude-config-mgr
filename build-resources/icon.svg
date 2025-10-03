@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="128" fill="url(#gradient)"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Main C shape for Claude -->
+  <path d="M 512 256
+           C 352 256 224 384 224 544
+           C 224 704 352 832 512 832
+           C 608 832 688 784 736 712
+           L 656 656
+           C 624 704 572 736 512 736
+           C 408 736 320 648 320 544
+           C 320 440 408 352 512 352
+           C 572 352 624 384 656 432
+           L 736 376
+           C 688 304 608 256 512 256 Z"
+        fill="white"
+        filter="url(#shadow)"/>
+
+  <!-- Config gear icon -->
+  <g transform="translate(640, 640)">
+    <path d="M 0 -80
+             L 20 -78
+             Q 30 -60, 46 -46
+             L 78 -20
+             L 80 0
+             L 78 20
+             Q 60 30, 46 46
+             L 20 78
+             L 0 80
+             L -20 78
+             Q -30 60, -46 46
+             L -78 20
+             L -80 0
+             L -78 -20
+             Q -60 -30, -46 -46
+             L -20 -78
+             Z"
+          fill="white"
+          opacity="0.9"/>
+    <circle cx="0" cy="0" r="30" fill="#6366f1"/>
+  </g>
+</svg>

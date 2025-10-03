@@ -190,9 +190,10 @@ export default function ProjectDetailView({
         filePath = `${project.path}/${fileName}`
         break
       case 'hooks':
-        fileName = 'hooks.json'
-        defaultContent = '{\n  \n}'
-        filePath = `${project.path}/.claude/hooks/${fileName}`
+        // Hooks are configured in settings.json, not a separate file
+        fileName = 'settings.json'
+        defaultContent = '{\n  "hooks": {\n    "pre-tool": [],\n    "post-tool": []\n  }\n}'
+        filePath = `${project.path}/.claude/${fileName}`
         break
     }
 

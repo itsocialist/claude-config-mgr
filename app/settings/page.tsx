@@ -7,28 +7,47 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Moon, Sun, Monitor, FolderOpen } from 'lucide-react'
+import { ArrowLeft, Moon, Sun, Monitor, FolderOpen, Plus, Trash2 } from 'lucide-react'
 import { showToast } from '@/components/StatusBar'
 
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const [projectPath, setProjectPath] = React.useState('~/workspace')
+  const [projectPaths, setProjectPaths] = React.useState<string[]>(['~/workspace'])
+  const [newPath, setNewPath] = React.useState('')
   const [mounted, setMounted] = React.useState(false)
 
   // Prevent hydration mismatch
   React.useEffect(() => {
     setMounted(true)
-    // Load saved project path from localStorage
-    const savedPath = localStorage.getItem('defaultProjectPath')
-    if (savedPath) {
-      setProjectPath(savedPath)
+    // Load saved project paths from localStorage
+    const savedPaths = localStorage.getItem('workspacePaths')
+    if (savedPaths) {
+      try {
+        const paths = JSON.parse(savedPaths)
+        setProjectPaths(Array.isArray(paths) ? paths : ['~/workspace'])
+      } catch {
+        setProjectPaths(['~/workspace'])
+      }
     }
   }, [])
 
+  const handleAddPath = () => {
+    if (newPath && !projectPaths.includes(newPath)) {
+      setProjectPaths([...projectPaths, newPath])
+      setNewPath('')
+    }
+  }
+
+  const handleRemovePath = (index: number) => {
+    if (projectPaths.length > 1) {
+      setProjectPaths(projectPaths.filter((_, i) => i !== index))
+    }
+  }
+
   const handleSave = () => {
-    // Save project path to localStorage
-    localStorage.setItem('defaultProjectPath', projectPath)
+    // Save project paths to localStorage
+    localStorage.setItem('workspacePaths', JSON.stringify(projectPaths))
     showToast('success', 'Settings saved successfully')
     // Navigate back to previous screen
     router.push('/project-dashboard')
@@ -123,18 +142,51 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="project-path">Default Project Path</Label>
-                <Input
-                  id="project-path"
-                  type="text"
-                  value={projectPath}
-                  onChange={(e) => setProjectPath(e.target.value)}
-                  placeholder="~/workspace"
-                />
-                <p className="text-sm text-muted-foreground">
-                  The directory where Claude Config Manager will search for projects with .claude folders
-                </p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Workspace Paths</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Configure multiple directories where Claude Config Manager will search for projects
+                  </p>
+                </div>
+
+                {/* Existing paths */}
+                <div className="space-y-2">
+                  {projectPaths.map((path, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex-1 flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/50">
+                        <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                        <span className="flex-1 font-mono text-sm">{path}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemovePath(index)}
+                        disabled={projectPaths.length === 1}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add new path */}
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={newPath}
+                    onChange={(e) => setNewPath(e.target.value)}
+                    placeholder="/path/to/workspace"
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddPath()}
+                  />
+                  <Button
+                    onClick={handleAddPath}
+                    disabled={!newPath || projectPaths.includes(newPath)}
+                    size="icon"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

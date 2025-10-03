@@ -8,6 +8,7 @@ import CrossProjectOperations from '@/components/project/CrossProjectOperations'
 import CopyConfigModal from '@/components/project/CopyConfigModal'
 import CompareConfigModal from '@/components/project/CompareConfigModal'
 import DetailedCompareModal from '@/components/project/DetailedCompareModal'
+import ImportProjectModal from '@/components/project/ImportProjectModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +19,8 @@ import {
   Download,
   Upload,
   Database,
-  Shield
+  Shield,
+  Plus
 } from "lucide-react"
 
 interface Project {
@@ -43,6 +45,7 @@ export default function ProjectDashboard() {
   const [compareModalOpen, setCompareModalOpen] = useState(false)
   const [detailedCompareOpen, setDetailedCompareOpen] = useState(false)
   const [compareTarget, setCompareTarget] = useState<any>(null)
+  const [importModalOpen, setImportModalOpen] = useState(false)
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('')
@@ -88,14 +91,31 @@ export default function ProjectDashboard() {
     try {
       console.log("Fetching config data...")
 
+      // Get workspace paths from localStorage
+      const savedPaths = localStorage.getItem('workspacePaths')
+      let workspacePaths = ['~/workspace']
+      if (savedPaths) {
+        try {
+          const parsed = JSON.parse(savedPaths)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            workspacePaths = parsed
+          }
+        } catch {
+          // Use default
+        }
+      }
+
       // Fetch global config
       const globalRes = await fetch("/api/projects/global")
       const globalData = await globalRes.json()
       console.log("Global config:", globalData)
       setGlobalConfig(globalData)
 
-      // Fetch project list from old endpoint to get paths
-      const configRes = await fetch("/api/config-files")
+      // Fetch project list with workspace paths
+      const params = new URLSearchParams({
+        workspacePaths: JSON.stringify(workspacePaths)
+      })
+      const configRes = await fetch(`/api/config-files?${params}`)
       const configData = await configRes.json()
       console.log("Config data projects count:", configData.projects?.length || 0)
 
@@ -220,6 +240,40 @@ export default function ProjectDashboard() {
     }
   }
 
+  const handleImportProject = async (projectPath: string) => {
+    try {
+      // Get current workspace paths
+      const savedPaths = localStorage.getItem('workspacePaths')
+      let workspacePaths = ['~/workspace']
+      if (savedPaths) {
+        try {
+          const parsed = JSON.parse(savedPaths)
+          if (Array.isArray(parsed)) {
+            workspacePaths = parsed
+          }
+        } catch {
+          // Use default
+        }
+      }
+
+      // Add the new project path if not already included
+      if (!workspacePaths.includes(projectPath)) {
+        workspacePaths.push(projectPath)
+        localStorage.setItem('workspacePaths', JSON.stringify(workspacePaths))
+      }
+
+      // Close modal and refresh
+      setImportModalOpen(false)
+      await fetchConfigData()
+
+      // Show success message (you could add a toast here)
+      console.log(`Successfully imported project from ${projectPath}`)
+    } catch (error) {
+      console.error('Failed to import project:', error)
+      alert('Failed to import project. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Fixed Header */}
@@ -253,6 +307,14 @@ export default function ProjectDashboard() {
                   All Projects
                 </Button>
               )}
+              <Button
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+                title="Import Project"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Import
+              </Button>
               <Button
                 variant="outline"
                 onClick={fetchConfigData}
@@ -340,7 +402,7 @@ export default function ProjectDashboard() {
         {/* Main Content */}
         {view === 'grid' ? (
           <ProjectGrid
-            projects={filteredProjects}
+            projects={filteredProjects as any}
             onSelectProject={handleProjectSelect}
             globalConfig={globalConfig}
             viewMode={viewMode}
@@ -391,6 +453,13 @@ export default function ProjectDashboard() {
           />
         </>
       )}
+
+      {/* Import Modal - Always available */}
+      <ImportProjectModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImport={handleImportProject}
+      />
     </div>
   )
 }
