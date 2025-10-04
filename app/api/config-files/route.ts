@@ -7,10 +7,23 @@ import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const homeDir = os.homedir()
     const claudeDir = path.join(homeDir, '.claude')
+
+    // Get workspace paths from query parameter
+    const searchParams = request.nextUrl.searchParams
+    const workspacePathsParam = searchParams.get('workspacePaths')
+    let workspacePaths: string[] = [`${homeDir}/workspace`]
+
+    if (workspacePathsParam) {
+      try {
+        workspacePaths = JSON.parse(workspacePathsParam)
+      } catch {
+        // Fallback to default
+      }
+    }
 
     const configData = {
       global: {
@@ -82,9 +95,18 @@ export async function GET() {
 
     // Find project-scoped Claude configurations
     try {
-      // Search for .claude directories in workspace (limit depth to avoid long searches)
-      const { stdout } = await execAsync(`find ~/workspace -maxdepth 3 -name ".claude" -type d 2>/dev/null | head -20`)
-      const projectDirs = stdout.trim().split('\n').filter(Boolean)
+      // Search for .claude directories in all workspace paths (limit depth to avoid long searches)
+      const projectDirs: string[] = []
+      for (const workspacePath of workspacePaths) {
+        const expandedPath = workspacePath.replace(/^~/, homeDir)
+        try {
+          const { stdout } = await execAsync(`find "${expandedPath}" -maxdepth 3 -name ".claude" -type d 2>/dev/null | head -20`)
+          const dirs = stdout.trim().split('\n').filter(Boolean)
+          projectDirs.push(...dirs)
+        } catch (error) {
+          console.error(`Error searching in ${expandedPath}:`, error)
+        }
+      }
 
       for (const projectClaudeDir of projectDirs) {
         const projectPath = path.dirname(projectClaudeDir)
@@ -180,19 +202,24 @@ export async function GET() {
           }
         }
 
-        // Check for hooks
-        const hooksDir = path.join(projectClaudeDir, 'hooks')
-        if (await fileExists(hooksDir)) {
-          const hookFiles = await fs.readdir(hooksDir)
-          for (const file of hookFiles) {
-            const filePath = path.join(hooksDir, file)
-            const stat = await fs.stat(filePath)
-            project.hooks.push({
-              name: file,
-              path: filePath,
-              size: stat.size,
-              lastModified: stat.mtime
-            })
+        // Check for hooks in settings.json
+        const settingsPath = path.join(projectClaudeDir, 'settings.json')
+        if (await fileExists(settingsPath)) {
+          try {
+            const settingsContent = await fs.readFile(settingsPath, 'utf-8')
+            const settings = JSON.parse(settingsContent)
+            if (settings.hooks) {
+              const stat = await fs.stat(settingsPath)
+              project.hooks.push({
+                name: 'hooks (in settings.json)',
+                path: settingsPath,
+                size: stat.size,
+                lastModified: stat.mtime,
+                content: JSON.stringify(settings.hooks, null, 2)
+              })
+            }
+          } catch (error) {
+            console.error('Error parsing settings.json for hooks:', error)
           }
         }
 
@@ -217,6 +244,27 @@ export async function GET() {
           }
         }
 
+        // Check for custom commands
+        const commandsDir = path.join(projectClaudeDir, 'commands')
+        if (await fileExists(commandsDir)) {
+          if (!project.commands) project.commands = []
+          const commandFiles = await fs.readdir(commandsDir)
+          for (const file of commandFiles) {
+            if (file.endsWith('.md')) {
+              const filePath = path.join(commandsDir, file)
+              const content = await fs.readFile(filePath, 'utf-8')
+              const stat = await fs.stat(filePath)
+              project.commands.push({
+                name: file.replace('.md', ''), // Command name without extension
+                path: filePath,
+                content,
+                size: stat.size,
+                lastModified: stat.mtime
+              })
+            }
+          }
+        }
+
         configData.projects.push(project)
       }
     } catch (error) {
@@ -225,8 +273,17 @@ export async function GET() {
 
     // Also check for .mcp.json files in projects
     try {
-      const { stdout } = await execAsync(`find ~/workspace -maxdepth 3 -name ".mcp.json" -type f 2>/dev/null | head -20`)
-      const mcpFiles = stdout.trim().split('\n').filter(Boolean)
+      const mcpFiles: string[] = []
+      for (const workspacePath of workspacePaths) {
+        const expandedPath = workspacePath.replace(/^~/, homeDir)
+        try {
+          const { stdout } = await execAsync(`find "${expandedPath}" -maxdepth 3 -name ".mcp.json" -type f 2>/dev/null | head -20`)
+          const files = stdout.trim().split('\n').filter(Boolean)
+          mcpFiles.push(...files)
+        } catch (error) {
+          console.error(`Error searching for MCP files in ${expandedPath}:`, error)
+        }
+      }
 
       for (const mcpPath of mcpFiles) {
         const projectPath = path.dirname(mcpPath)
@@ -275,8 +332,17 @@ export async function GET() {
 
     // Also search for standalone CLAUDE.md files in workspace projects
     try {
-      const { stdout } = await execAsync(`find ~/workspace -maxdepth 2 -name "CLAUDE.md" -type f 2>/dev/null | head -30`)
-      const claudeMdFiles = stdout.trim().split('\n').filter(Boolean)
+      const claudeMdFiles: string[] = []
+      for (const workspacePath of workspacePaths) {
+        const expandedPath = workspacePath.replace(/^~/, homeDir)
+        try {
+          const { stdout } = await execAsync(`find "${expandedPath}" -maxdepth 2 -name "CLAUDE.md" -type f 2>/dev/null | head -30`)
+          const files = stdout.trim().split('\n').filter(Boolean)
+          claudeMdFiles.push(...files)
+        } catch (error) {
+          console.error(`Error searching for CLAUDE.md in ${expandedPath}:`, error)
+        }
+      }
 
       for (const claudeMdPath of claudeMdFiles) {
         const projectPath = path.dirname(claudeMdPath)
@@ -327,8 +393,17 @@ export async function GET() {
 
     // Also search for standalone agent files in workspace projects
     try {
-      const { stdout } = await execAsync(`find ~/workspace -maxdepth 3 -path "*/agents/*.md" -o -path "*/agents/*.json" 2>/dev/null | head -50`)
-      const agentFiles = stdout.trim().split('\n').filter(Boolean)
+      const agentFiles: string[] = []
+      for (const workspacePath of workspacePaths) {
+        const expandedPath = workspacePath.replace(/^~/, homeDir)
+        try {
+          const { stdout } = await execAsync(`find "${expandedPath}" -maxdepth 3 -path "*/agents/*.md" -o -path "*/agents/*.json" 2>/dev/null | head -50`)
+          const files = stdout.trim().split('\n').filter(Boolean)
+          agentFiles.push(...files)
+        } catch (error) {
+          console.error(`Error searching for agent files in ${expandedPath}:`, error)
+        }
+      }
 
       for (const agentPath of agentFiles) {
         // Extract project path from agent file path

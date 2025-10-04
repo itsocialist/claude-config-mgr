@@ -1,23 +1,30 @@
 import { NextResponse } from 'next/server'
-import { RealConfigManager } from '@/src/services/RealConfigManager'
+// TODO: Implement RealConfigManager
+// import { RealConfigManager } from '@/src/services/RealConfigManager'
 
 export async function POST(request: Request) {
   try {
-    const { name, isPrivate = false } = await request.json()
-    
+    const body = await request.json() as { name?: string; isPrivate?: boolean }
+    const { name, isPrivate = false } = body
+
     if (!name) {
       return NextResponse.json(
         { error: 'Profile name is required' },
         { status: 400 }
       )
     }
-    
-    const manager = new RealConfigManager()
-    await manager.initialize()
-    
-    const profile = await manager.createProfileFromCurrent(name, isPrivate)
-    
-    return NextResponse.json({ 
+
+    // TODO: Implement profile capture logic
+    // const manager = new RealConfigManager()
+    // await manager.initialize()
+    // const profile = await manager.createProfileFromCurrent(name, isPrivate)
+
+    return NextResponse.json({
+      error: 'Profile capture not yet implemented'
+    }, { status: 501 })
+
+    /* Original return when implemented:
+    return NextResponse.json({
       success: true,
       profile: {
         name: profile.name,
@@ -26,6 +33,7 @@ export async function POST(request: Request) {
         hasCodeConfig: !!profile.code?.mcpConfig
       }
     })
+    */
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to capture profile' },

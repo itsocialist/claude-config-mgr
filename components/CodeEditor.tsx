@@ -68,7 +68,7 @@ export default function CodeEditor({
             bracketPairColorization: {
               enabled: true
             },
-            padding: { top: 16, bottom: 16, left: 16, right: 16 },
+            padding: { top: 16, bottom: 16 } as any,
             lineDecorationsWidth: readOnly ? 0 : 10,
             lineNumbersMinChars: 3,
             glyphMargin: !readOnly,

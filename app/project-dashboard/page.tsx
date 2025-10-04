@@ -92,14 +92,31 @@ export default function ProjectDashboard() {
     try {
       console.log("Fetching config data...")
 
+      // Get workspace paths from localStorage
+      const savedPaths = localStorage.getItem('workspacePaths')
+      let workspacePaths = ['~/workspace']
+      if (savedPaths) {
+        try {
+          const parsed = JSON.parse(savedPaths)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            workspacePaths = parsed
+          }
+        } catch {
+          // Use default
+        }
+      }
+
       // Fetch global config
       const globalRes = await fetch("/api/projects/global")
       const globalData = await globalRes.json()
       console.log("Global config:", globalData)
       setGlobalConfig(globalData)
 
-      // Fetch project list from old endpoint to get paths
-      const configRes = await fetch("/api/config-files")
+      // Fetch project list with workspace paths
+      const params = new URLSearchParams({
+        workspacePaths: JSON.stringify(workspacePaths)
+      })
+      const configRes = await fetch(`/api/config-files?${params}`)
       const configData = await configRes.json()
       console.log("Config data projects count:", configData.projects?.length || 0)
 
@@ -225,6 +242,40 @@ export default function ProjectDashboard() {
     }
   }
 
+  const handleImportProject = async (projectPath: string) => {
+    try {
+      // Get current workspace paths
+      const savedPaths = localStorage.getItem('workspacePaths')
+      let workspacePaths = ['~/workspace']
+      if (savedPaths) {
+        try {
+          const parsed = JSON.parse(savedPaths)
+          if (Array.isArray(parsed)) {
+            workspacePaths = parsed
+          }
+        } catch {
+          // Use default
+        }
+      }
+
+      // Add the new project path if not already included
+      if (!workspacePaths.includes(projectPath)) {
+        workspacePaths.push(projectPath)
+        localStorage.setItem('workspacePaths', JSON.stringify(workspacePaths))
+      }
+
+      // Close modal and refresh
+      setImportModalOpen(false)
+      await fetchConfigData()
+
+      // Show success message (you could add a toast here)
+      console.log(`Successfully imported project from ${projectPath}`)
+    } catch (error) {
+      console.error('Failed to import project:', error)
+      alert('Failed to import project. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Fixed Header */}
@@ -336,7 +387,7 @@ export default function ProjectDashboard() {
         {/* Main Content */}
         {view === 'grid' ? (
           <ProjectGrid
-            projects={filteredProjects}
+            projects={filteredProjects as any}
             onSelectProject={handleProjectSelect}
             onBadgeClick={(section) => setInitialTab(section)}
             globalConfig={globalConfig}
@@ -391,10 +442,7 @@ export default function ProjectDashboard() {
           <ImportProjectModal
             isOpen={importModalOpen}
             onClose={() => setImportModalOpen(false)}
-            onImport={async () => {
-              await fetchConfigData()
-              setImportModalOpen(false)
-            }}
+            onImport={handleImportProject}
           />
         </>
       )}

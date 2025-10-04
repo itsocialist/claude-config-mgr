@@ -596,7 +596,7 @@ export default function Dashboard() {
                         const config = JSON.parse(file.content)
                         if (config.mcpServers) {
                           Object.entries(config.mcpServers).forEach(([name, server]) => {
-                            allServers[`desktop-global-${name}`] = { ...server, source: 'Global Desktop Config', serverName: name }
+                            allServers[`desktop-global-${name}`] = { ...(server as any), source: 'Global Desktop Config', serverName: name }
                           })
                         }
                       } catch (e) {}
@@ -611,7 +611,7 @@ export default function Dashboard() {
                           const config = JSON.parse(file.content)
                           if (config.mcpServers) {
                             Object.entries(config.mcpServers).forEach(([name, server]) => {
-                              allServers[`project-${project.name}-${name}`] = { ...server, source: `Project: ${project.name}`, serverName: name }
+                              allServers[`project-${project.name}-${name}`] = { ...(server as any), source: `Project: ${project.name}`, serverName: name }
                             })
                           }
                         } catch (e) {}
@@ -622,7 +622,7 @@ export default function Dashboard() {
                   // Also include servers from selected profile if available
                   if (selectedProfile?.desktop?.desktopConfig?.mcpServers) {
                     Object.entries(selectedProfile.desktop.desktopConfig.mcpServers).forEach(([name, server]) => {
-                      allServers[`profile-${name}`] = { ...server, source: `Profile: ${selectedProfile.name}`, serverName: name }
+                      allServers[`profile-${name}`] = { ...(server as any), source: `Profile: ${selectedProfile.name}`, serverName: name }
                     })
                   }
 

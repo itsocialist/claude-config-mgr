@@ -1,0 +1,67 @@
+appId: com.claudeconfig.manager
+productName: Claude Config Manager
+directories:
+  output: dist
+  buildResources: build-resources
+
+files:
+  - "main.js"
+  - "preload.js"
+  - "electron-server.js"
+  - "package.json"
+  - ".next/**/*"
+  - "public/**/*"
+  - "node_modules/**/*"
+  - "next.config.js"
+
+mac:
+  category: public.app-category.developer-tools
+  icon: build-resources/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build-resources/entitlements.mac.plist
+  entitlementsInherit: build-resources/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+win:
+  icon: build-resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+linux:
+  icon: build-resources
+  category: Development
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: snap
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+publish:
+  provider: github
+  owner: your-github-username
+  repo: claude-config-mgr
+  releaseType: release
