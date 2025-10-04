@@ -55,18 +55,18 @@ export default function ProjectDetailView({
   onCopyTo,
   onCompare
 }: ProjectDetailViewProps) {
-  const getInitialTab = (): ConfigType => {
-    if (initialTab === 'memory') return 'instructions'
-    if (initialTab === 'settings') return 'settings'
-    if (initialTab === 'agents') return 'agents'
-    return 'instructions'
-  }
-
-  const [activeTab, setActiveTab] = useState<ConfigType>(getInitialTab())
+  const [activeTab, setActiveTab] = useState<ConfigType>('instructions')
   const [selectedFile, setSelectedFile] = useState<any>(null)
   const [editing, setEditing] = useState(false)
   const [content, setContent] = useState('')
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
+
+  // Set initial tab based on prop
+  React.useEffect(() => {
+    if (initialTab === 'memory') setActiveTab('instructions')
+    else if (initialTab === 'settings') setActiveTab('settings')
+    else if (initialTab === 'agents') setActiveTab('agents')
+  }, [initialTab])
 
   // Get files for active tab
   const getFilesForTab = (tab: ConfigType) => {

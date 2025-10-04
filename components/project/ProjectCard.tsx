@@ -109,21 +109,18 @@ export default function ProjectCard({
       onClick={onClick}
     >
       <div className="p-4">
-        {/* Header with folder icon and title */}
-        <div className="flex items-center gap-2 mb-2">
-          <Folder className="w-4 h-4 text-gray-400" />
-          <h3 className="font-medium text-sm text-gray-900 dark:text-white truncate">
-            {project.name}
-          </h3>
-        </div>
+        {/* Header with title only */}
+        <h3 className="font-semibold text-base text-gray-900 dark:text-white truncate mb-2">
+          {project.name}
+        </h3>
 
         {/* Path */}
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 truncate">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 truncate">
           {project.path}
         </p>
 
         {/* Badges row */}
-        <div className="flex flex-wrap gap-1 mb-3">
+        <div className="flex flex-wrap gap-1">
           {stats.claudeMd && (
             <Badge
               variant="secondary"
@@ -169,11 +166,6 @@ export default function ProjectCard({
               {stats.agents} Agents
             </Badge>
           )}
-        </div>
-
-        {/* File count footer */}
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          {totalFiles} {totalFiles === 1 ? 'file' : 'files'}
         </div>
       </div>
     </Card>
