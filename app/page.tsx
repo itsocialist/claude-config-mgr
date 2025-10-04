@@ -314,22 +314,28 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Fixed Header */}
-      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+      <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
         <div className="container mx-auto px-6 py-4 max-w-7xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Claude Config Manager
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-sm">
-                Unified management for Claude Desktop, Claude Code, and memory systems
-              </p>
-            </div>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-medium text-gray-900 dark:text-white">
+              Claude Config Manager
+            </h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                fetchStatus()
+                fetchProfiles()
+                fetchClaudeData()
+                fetchConfigFiles()
+              }}
+              disabled={loading}
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </div>
       </div>
@@ -337,184 +343,98 @@ export default function Dashboard() {
       <div className="container mx-auto p-6 max-w-7xl">
 
         {status && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                  Active Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600">
-                    {status.currentProfile || "None"}
-                  </Badge>
-                  {profiles.length > 0 && (
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {profiles.length} total
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            {/* Total Projects */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-6 text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Projects</div>
+              <div className="text-3xl font-semibold text-gray-900 dark:text-white">
+                {claudeData?.projects?.length || 0}
+              </div>
+            </div>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Check className="w-5 h-5 text-green-600" />
-                  Configuration Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Claude Desktop</span>
-                    <div className="flex items-center gap-1">
-                      {status.desktopConfigExists ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-xs text-slate-600">
-                        {status.desktopConfigExists ? 'Active' : 'Missing'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Claude Code</span>
-                    <div className="flex items-center gap-1">
-                      {status.codeConfigExists ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-xs text-slate-600">
-                        {status.codeConfigExists ? 'Active' : 'Missing'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* With Memory */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-6 text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">With Memory</div>
+              <div className="text-3xl font-semibold text-gray-900 dark:text-white">
+                {claudeData?.projects?.filter((p: any) => p.claudeMd).length || 0}
+              </div>
+            </div>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-purple-600" />
-                  Claude Config
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Projects</span>
-                    <Badge variant="outline" className="text-xs">
-                      {claudeData?.projects?.length || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Agents</span>
-                    <Badge variant="outline" className="text-xs">
-                      {claudeData?.agents?.length || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Shell Snapshots</span>
-                    <Badge variant="outline" className="text-xs">
-                      {claudeData?.shells?.length || 0}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* With Agents */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-6 text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">With Agents</div>
+              <div className="text-3xl font-semibold text-gray-900 dark:text-white">
+                {claudeData?.projects?.filter((p: any) => p.agents && p.agents.length > 0).length || 0}
+              </div>
+            </div>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <RefreshCw className="w-5 h-5 text-orange-600" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    size="sm"
-                    onClick={captureCurrentConfig}
-                    disabled={loading}
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Save className="w-4 h-4 mr-1" />
-                    Capture Config
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={syncMCPServers}
-                    disabled={loading}
-                    className="w-full border-orange-600 text-orange-600 hover:bg-orange-50"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-1" />
-                    Sync MCP
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* With MCPs */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-6 text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">With MCPs</div>
+              <div className="text-3xl font-semibold text-gray-900 dark:text-white">
+                {(() => {
+                  const projectsWithMCP = claudeData?.projects?.filter((p: any) =>
+                    p.settings?.some((s: any) => s.name === '.mcp.json')
+                  ).length || 0;
+                  return projectsWithMCP;
+                })()}
+              </div>
+            </div>
           </div>
         )}
 
         <Tabs defaultValue="profiles" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full max-w-5xl bg-white dark:bg-slate-800 border shadow-sm p-1">
-            <TabsTrigger value="profiles" className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <TabsList className="grid grid-cols-5 w-full max-w-5xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-1">
+            <TabsTrigger value="profiles" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-slate-700">
               <Shield className="w-4 h-4" />
               <span className="hidden sm:inline">Profiles</span>
             </TabsTrigger>
-            <TabsTrigger value="servers" className="flex items-center gap-2 data-[state=active]:bg-green-500 data-[state=active]:text-white">
+            <TabsTrigger value="servers" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-slate-700">
               <Server className="w-4 h-4" />
               <span className="hidden sm:inline">MCP Servers</span>
             </TabsTrigger>
-            <TabsTrigger value="memory" className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+            <TabsTrigger value="memory" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-slate-700">
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Config Files</span>
             </TabsTrigger>
-            <TabsTrigger value="claude-md" className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+            <TabsTrigger value="claude-md" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-slate-700">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Memory</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-slate-500 data-[state=active]:text-white">
+            <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-slate-700">
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Settings</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profiles" className="space-y-6">
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-t-lg">
+            <Card className="border border-gray-200 dark:border-slate-700">
+              <CardHeader className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
                 <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-6 h-6 text-blue-600" />
+                  <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   Configuration Profiles
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription>
                   Manage different configuration profiles for various environments and use cases
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {profiles.map((profile) => (
-                    <Card key={profile.name} className="group cursor-pointer hover:shadow-xl transition-all duration-200 hover:-translate-y-1 border-0 shadow-md">
+                    <Card key={profile.name} className="border border-gray-200 dark:border-slate-700 hover:shadow-lg transition-shadow">
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <div className={`w-3 h-3 rounded-full ${
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${
                                 profile.name === currentProfile
-                                  ? 'bg-green-500 shadow-lg shadow-green-200'
+                                  ? 'bg-green-500'
                                   : 'bg-gray-300'
                               }`} />
                               {profile.name}
                             </CardTitle>
                             {profile.description && (
-                              <CardDescription className="mt-2 text-sm">
+                              <CardDescription className="mt-1 text-sm">
                                 {profile.description}
                               </CardDescription>
                             )}
@@ -522,13 +442,11 @@ export default function Dashboard() {
                           <div className="flex flex-col items-end gap-1">
                             {profile.isPrivate && (
                               <Badge variant="secondary" className="text-xs">
-                                <Shield className="w-3 h-3 mr-1" />
                                 Private
                               </Badge>
                             )}
                             {profile.name === currentProfile && (
-                              <Badge className="text-xs bg-green-500">
-                                <Check className="w-3 h-3 mr-1" />
+                              <Badge className="text-xs bg-green-100 text-green-800">
                                 Active
                               </Badge>
                             )}
@@ -541,7 +459,7 @@ export default function Dashboard() {
                             size="sm"
                             variant="outline"
                             onClick={() => fetchProfile(profile.name)}
-                            className="flex-1 group-hover:border-blue-400"
+                            className="flex-1"
                           >
                             <Eye className="w-4 h-4 mr-1" />
                             View
@@ -550,7 +468,7 @@ export default function Dashboard() {
                             size="sm"
                             onClick={() => applyProfile(profile.name)}
                             disabled={loading || profile.name === currentProfile}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
+                            className="flex-1"
                           >
                             <Upload className="w-4 h-4 mr-1" />
                             {profile.name === currentProfile ? 'Applied' : 'Apply'}
@@ -560,16 +478,16 @@ export default function Dashboard() {
                     </Card>
                   ))}
 
-                  <Card className="border-2 border-dashed border-blue-300 cursor-pointer hover:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-blue-500 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-slate-800"
+                  <Card className="border-2 border-dashed border-gray-300 dark:border-slate-600 cursor-pointer hover:border-gray-400 dark:hover:border-slate-500"
                         onClick={captureCurrentConfig}>
                     <CardHeader className="text-center py-8">
-                      <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-3">
-                        <Plus className="w-6 h-6 text-blue-600" />
+                      <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
+                        <Plus className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                       </div>
-                      <CardTitle className="text-lg text-blue-700 dark:text-blue-300">
+                      <CardTitle className="text-base text-gray-700 dark:text-gray-300">
                         Create New Profile
                       </CardTitle>
-                      <CardDescription className="text-blue-600 dark:text-blue-400">
+                      <CardDescription className="text-gray-600 dark:text-gray-400">
                         Capture your current configuration as a new profile
                       </CardDescription>
                     </CardHeader>

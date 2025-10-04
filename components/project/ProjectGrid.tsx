@@ -33,6 +33,7 @@ interface Project {
 interface ProjectGridProps {
   projects: Project[]
   onSelectProject: (project: Project) => void
+  onBadgeClick?: (section: 'memory' | 'settings' | 'agents') => void
   onCreateProject?: () => void
   globalConfig?: any
   viewMode?: 'grid' | 'list'
@@ -42,6 +43,7 @@ interface ProjectGridProps {
 export default function ProjectGrid({
   projects,
   onSelectProject,
+  onBadgeClick,
   onCreateProject,
   globalConfig,
   viewMode: externalViewMode,
@@ -230,6 +232,7 @@ export default function ProjectGrid({
               key={project.path}
               project={project}
               onClick={() => onSelectProject(project)}
+              onBadgeClick={onBadgeClick}
               viewMode="grid"
             />
           ))}
@@ -241,6 +244,7 @@ export default function ProjectGrid({
               key={project.path}
               project={project}
               onClick={() => onSelectProject(project)}
+              onBadgeClick={onBadgeClick}
               viewMode="list"
             />
           ))}

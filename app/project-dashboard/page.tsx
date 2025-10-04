@@ -8,6 +8,7 @@ import CrossProjectOperations from '@/components/project/CrossProjectOperations'
 import CopyConfigModal from '@/components/project/CopyConfigModal'
 import CompareConfigModal from '@/components/project/CompareConfigModal'
 import DetailedCompareModal from '@/components/project/DetailedCompareModal'
+import ImportProjectModal from '@/components/project/ImportProjectModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +19,8 @@ import {
   Download,
   Upload,
   Database,
-  Shield
+  Shield,
+  Plus
 } from "lucide-react"
 
 interface Project {
@@ -37,12 +39,14 @@ export default function ProjectDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'grid' | 'detail'>('grid')
+  const [initialTab, setInitialTab] = useState<'memory' | 'settings' | 'agents' | undefined>(undefined)
 
   // Modal states
   const [copyModalOpen, setCopyModalOpen] = useState(false)
   const [compareModalOpen, setCompareModalOpen] = useState(false)
   const [detailedCompareOpen, setDetailedCompareOpen] = useState(false)
   const [compareTarget, setCompareTarget] = useState<any>(null)
+  const [importModalOpen, setImportModalOpen] = useState(false)
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('')
@@ -126,6 +130,7 @@ export default function ProjectDashboard() {
       setSelectedProject(project)
     }
     setView('detail')
+    window.scrollTo(0, 0)
   }
 
   const handleSaveConfig = async (type: string, content: string, filePath: string) => {
@@ -221,45 +226,46 @@ export default function ProjectDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Fixed Header */}
-      <div className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+      <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
         <div className="container mx-auto px-6 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Database className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Claude Config Manager
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400 text-sm">
-                  Project-Centric Configuration Management
-                </p>
-              </div>
-            </div>
+            <h1 className="text-2xl font-medium text-gray-900 dark:text-white">
+              Claude Config Manager
+            </h1>
 
             <div className="flex items-center gap-2">
               {view === 'detail' && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => {
                     setView('grid')
                     setSelectedProject(null)
+                    window.scrollTo(0, 0)
                   }}
                 >
                   <Home className="w-4 h-4 mr-2" />
                   All Projects
                 </Button>
               )}
+              {view === 'grid' && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setImportModalOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Import
+                </Button>
+              )}
               <Button
-                variant="outline"
+                variant="ghost"
+                size="icon"
                 onClick={fetchConfigData}
                 disabled={loading}
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
               <ThemeToggle />
             </div>
@@ -267,59 +273,49 @@ export default function ProjectDashboard() {
         </div>
       </div>
 
-      {/* Stats and Search Section - Sticky for grid view */}
+      {/* Stats and Search Section - Sticky */}
       {view === 'grid' && (
-        <div className="sticky top-[73px] z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
-          {/* Stats Section */}
-          <div className="container mx-auto px-6 py-4 max-w-7xl">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">Total Projects</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{loading ? '...' : projects.length}</p>
+        <div className="sticky top-[73px] z-40 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
+          <div className="container mx-auto px-6 max-w-7xl">
+            {/* Stats Section */}
+            <div className="py-4">
+              <div className="grid grid-cols-4 gap-4">
+                {/* Total Projects */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">Total Projects</div>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {loading ? '...' : projects.length}
                   </div>
-                  <Database className="w-8 h-8 text-blue-500 opacity-50" />
                 </div>
-              </div>
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-orange-600 dark:text-orange-400">With Memory</p>
-                    <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                      {projects.filter(p => p.claudeMd).length}
-                    </p>
+
+                {/* With Memory */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">With Memory</div>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {projects.filter(p => p.claudeMd).length}
                   </div>
-                  <Settings className="w-8 h-8 text-orange-500 opacity-50" />
                 </div>
-              </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-purple-600 dark:text-purple-400">With Agents</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                      {projects.filter(p => p.agents?.length > 0).length}
-                    </p>
+
+                {/* With Agents */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">With Agents</div>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {projects.filter(p => p.agents?.length > 0).length}
                   </div>
-                  <Shield className="w-8 h-8 text-purple-500 opacity-50" />
                 </div>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-600 dark:text-green-400">MCP Servers</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                      {projects.reduce((sum, p) => sum + (p.mcpServers?.length || 0), 0)}
-                    </p>
+
+                {/* With MCPs */}
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 text-center">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">With MCPs</div>
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {projects.filter(p => p.mcpServers && p.mcpServers.length > 0).length}
                   </div>
-                  <Database className="w-8 h-8 text-green-500 opacity-50" />
                 </div>
               </div>
             </div>
-          </div>
-          {/* Search and Filter Bar */}
-          <div className="border-t border-slate-200 dark:border-slate-700">
-            <div className="container mx-auto px-6 py-3 max-w-7xl">
+
+            {/* Search and Filter Bar */}
+            <div className="pb-3">
               <ProjectSearchBar
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
@@ -342,6 +338,7 @@ export default function ProjectDashboard() {
           <ProjectGrid
             projects={filteredProjects}
             onSelectProject={handleProjectSelect}
+            onBadgeClick={(section) => setInitialTab(section)}
             globalConfig={globalConfig}
             viewMode={viewMode}
             hideSearchBar
@@ -351,9 +348,11 @@ export default function ProjectDashboard() {
             <ProjectDetailView
               project={selectedProject}
               isGlobal={selectedProject.name === "Global Configuration"}
+              initialTab={initialTab}
               onBack={() => {
                 setView('grid')
                 setSelectedProject(null)
+                setInitialTab(undefined)
               }}
               onSave={handleSaveConfig}
               onCopyTo={() => setCopyModalOpen(true)}
@@ -388,6 +387,14 @@ export default function ProjectDashboard() {
             }}
             project1={selectedProject}
             project2={compareTarget}
+          />
+          <ImportProjectModal
+            isOpen={importModalOpen}
+            onClose={() => setImportModalOpen(false)}
+            onImport={async () => {
+              await fetchConfigData()
+              setImportModalOpen(false)
+            }}
           />
         </>
       )}

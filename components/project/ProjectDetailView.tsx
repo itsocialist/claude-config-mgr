@@ -37,6 +37,7 @@ interface ProjectDetailViewProps {
     mcpServers?: any[]
   }
   isGlobal?: boolean
+  initialTab?: 'memory' | 'settings' | 'agents'
   onBack: () => void
   onSave?: (type: string, content: string, filePath: string) => Promise<void>
   onCopyTo?: () => void
@@ -48,12 +49,20 @@ type ConfigType = 'instructions' | 'settings' | 'agents' | 'mcp' | 'hooks'
 export default function ProjectDetailView({
   project,
   isGlobal = false,
+  initialTab,
   onBack,
   onSave,
   onCopyTo,
   onCompare
 }: ProjectDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<ConfigType>('instructions')
+  const getInitialTab = (): ConfigType => {
+    if (initialTab === 'memory') return 'instructions'
+    if (initialTab === 'settings') return 'settings'
+    if (initialTab === 'agents') return 'agents'
+    return 'instructions'
+  }
+
+  const [activeTab, setActiveTab] = useState<ConfigType>(getInitialTab())
   const [selectedFile, setSelectedFile] = useState<any>(null)
   const [editing, setEditing] = useState(false)
   const [content, setContent] = useState('')
