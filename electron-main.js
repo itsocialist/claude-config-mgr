@@ -14,6 +14,7 @@ async function createWindow() {
     height: 800,
     show: false,
     autoHideMenuBar: true, // Hide menu bar on Windows/Linux
+    titleBarStyle: 'hiddenInset', // macOS: Hide title bar but keep window controls
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

@@ -364,31 +364,34 @@ export async function GET(request: NextRequest) {
           configData.projects.push(project)
         }
 
-        // Add MCP file to settings and parse MCP servers
-        const content = await fs.readFile(mcpPath, 'utf-8')
-        const stat = await fs.stat(mcpPath)
-        project.settings.push({
-          name: '.mcp.json',
-          path: mcpPath,
-          content,
-          size: stat.size,
-          lastModified: stat.mtime,
-          type: 'json'
-        })
+        // Add MCP file to settings and parse MCP servers (avoid duplicates)
+        const hasMcpAlready = project.settings.some((s: any) => s.name === '.mcp.json')
+        if (!hasMcpAlready) {
+          const content = await fs.readFile(mcpPath, 'utf-8')
+          const stat = await fs.stat(mcpPath)
+          project.settings.push({
+            name: '.mcp.json',
+            path: mcpPath,
+            content,
+            size: stat.size,
+            lastModified: stat.mtime,
+            type: 'json'
+          })
 
-        // Parse and add MCP servers
-        try {
-          const mcpConfig = JSON.parse(content)
-          if (mcpConfig.mcpServers) {
-            for (const [serverName, serverConfig] of Object.entries(mcpConfig.mcpServers)) {
-              project.mcpServers.push({
-                name: serverName,
-                ...serverConfig as any
-              })
+          // Parse and add MCP servers
+          try {
+            const mcpConfig = JSON.parse(content)
+            if (mcpConfig.mcpServers) {
+              for (const [serverName, serverConfig] of Object.entries(mcpConfig.mcpServers)) {
+                project.mcpServers.push({
+                  name: serverName,
+                  ...serverConfig as any
+                })
+              }
             }
+          } catch (error) {
+            console.error('Error parsing MCP config:', error)
           }
-        } catch (error) {
-          console.error('Error parsing MCP config:', error)
         }
       }
     } catch (error) {
