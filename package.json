@@ -1,6 +1,6 @@
 {
   "name": "claude-config-mgr",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Configuration manager for Claude Desktop and Claude Code",
   "main": "main.js",
   "scripts": {

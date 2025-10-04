@@ -1,6 +1,6 @@
 # Claude Config Manager
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/yourusername/claude-config-mgr)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/yourusername/claude-config-mgr)
 [![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black.svg)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -27,13 +27,14 @@ A modern, project-centric configuration management tool for Claude Desktop and C
 - **Selective Copy**: Choose specific configuration types to copy (Memory, Settings, Agents, MCP, Hooks)
 
 ### 🎨 Modern UI/UX
+- **Clean Minimal Design**: Figma-inspired interface with clear typography and spacing
 - **Dark Mode**: Full dark mode support with system theme detection
 - **Grid & List Views**: Choose your preferred layout with instant switching
 - **Advanced Search & Filter**: Filter by configuration features (Memory, MCP, Agents)
 - **Monaco Editor**: Professional code editing experience
-- **Sticky Headers**: Navigation stays accessible while scrolling
+- **Sticky Headers**: Stats and navigation stay accessible while scrolling
+- **Interactive Badges**: Click badges to navigate to specific configuration sections
 - **Toast Notifications**: Status bar with real-time feedback
-- **Gradient Cards**: Beautiful gradient styling for stat cards
 - **Responsive Design**: Works on desktop and tablet screens
 
 ### 🖥️ Desktop Application
@@ -143,19 +144,35 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - see LICENSE file for details
 
-## Recent Changes (v0.3.0)
+## Recent Changes (v0.4.0)
 
+### Major UI Redesign
+- 🎨 **Complete Figma Design Implementation**: Applied clean, minimal design system from Figma mockups
+- 📊 **Improved Statistics Section**: Redesigned stat cards with cleaner typography and spacing
+- 🔍 **Enhanced Search Bar**: Better visual hierarchy and sticky positioning
+- 🏷️ **Interactive Badge Navigation**: Click badges to navigate directly to specific configuration tabs
+- 🗂️ **Cleaner Project Cards**: Removed unnecessary icons and file counts for minimal design
+
+### New Features
+- ➕ **Import Project Functionality**: Added ability to import projects from custom paths
+- 🖥️ **macOS Title Bar Support**: Hide title bar on macOS while keeping window controls
+- 📍 **Sticky Headers**: Stats and search sections now stick while scrolling
+- 🔄 **Scroll Position Reset**: Automatic scroll reset when navigating between views
+
+### Bug Fixes & Improvements
+- 🐛 Fixed MCP server detection across multiple file types and locations
+- 🐛 Fixed duplicate MCP file entries in configuration tabs
+- 🐛 Fixed hooks detection from settings.json files
+- 🐛 Fixed badge navigation to correct configuration tabs
+- 🌗 Restored dark mode toggle functionality
+- 📐 Adjusted metrics height and font sizes to match Figma specifications
+- 🎯 Improved tab filtering logic to separate MCP from Settings properly
+
+### Previous (v0.3.0)
 - ✨ Added Copy To and Compare configuration modals
 - 📋 Implemented system clipboard copy functionality
-- 🐛 Fixed sticky header gap issues in dashboard
 - ⚙️ Added settings page with Electron configurations
 - 🔔 Added StatusBar component with toast notifications
-- 🔍 Added ProjectSearchBar component for better filtering
-- 📁 Fixed MCP file location to save in project root (.mcp.json)
-- 🏷️ Fixed project name detection for hidden directories
-- 🌙 Improved dark mode support across components
-- 🎨 Added gradient styling to stat cards
-- ✅ Added checkbox and label UI components
 
 ## Support
 
