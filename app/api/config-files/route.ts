@@ -129,7 +129,8 @@ export async function GET(request: NextRequest) {
           claudeMd: null,
           settings: [],
           hooks: [],
-          agents: []
+          agents: [],
+          mcpServers: []
         }
 
         // Check for project CLAUDE.md files following the proper convention:
@@ -199,6 +200,22 @@ export async function GET(request: NextRequest) {
               lastModified: stat.mtime,
               type: 'json'
             })
+
+            // Check if this settings file contains MCP servers
+            try {
+              const settingsData = JSON.parse(content)
+              if (settingsData.mcpServers) {
+                for (const [serverName, serverConfig] of Object.entries(settingsData.mcpServers)) {
+                  project.mcpServers.push({
+                    name: serverName,
+                    source: file,
+                    ...serverConfig as any
+                  })
+                }
+              }
+            } catch (error) {
+              // Silent fail for non-JSON or invalid format
+            }
           }
         }
 
@@ -265,6 +282,37 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        // Check for .mcp.json in project root
+        const mcpPath = path.join(projectPath, '.mcp.json')
+        if (await fileExists(mcpPath)) {
+          const content = await fs.readFile(mcpPath, 'utf-8')
+          const stat = await fs.stat(mcpPath)
+          project.settings.push({
+            name: '.mcp.json',
+            path: mcpPath,
+            content,
+            size: stat.size,
+            lastModified: stat.mtime,
+            type: 'json'
+          })
+
+          // Parse and add MCP servers
+          try {
+            const mcpConfig = JSON.parse(content)
+            if (mcpConfig.mcpServers) {
+              for (const [serverName, serverConfig] of Object.entries(mcpConfig.mcpServers)) {
+                project.mcpServers.push({
+                  name: serverName,
+                  source: '.mcp.json',
+                  ...serverConfig as any
+                })
+              }
+            }
+          } catch (error) {
+            console.error('Error parsing MCP config:', error)
+          }
+        }
+
         configData.projects.push(project)
       }
     } catch (error) {
@@ -309,12 +357,13 @@ export async function GET(request: NextRequest) {
             claudeMd: null,
             settings: [],
             hooks: [],
-            agents: []
+            agents: [],
+            mcpServers: []
           }
           configData.projects.push(project)
         }
 
-        // Add MCP file to settings
+        // Add MCP file to settings and parse MCP servers
         const content = await fs.readFile(mcpPath, 'utf-8')
         const stat = await fs.stat(mcpPath)
         project.settings.push({
@@ -325,6 +374,21 @@ export async function GET(request: NextRequest) {
           lastModified: stat.mtime,
           type: 'json'
         })
+
+        // Parse and add MCP servers
+        try {
+          const mcpConfig = JSON.parse(content)
+          if (mcpConfig.mcpServers) {
+            for (const [serverName, serverConfig] of Object.entries(mcpConfig.mcpServers)) {
+              project.mcpServers.push({
+                name: serverName,
+                ...serverConfig as any
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing MCP config:', error)
+        }
       }
     } catch (error) {
       console.error('Error searching for MCP files:', error)
@@ -370,7 +434,8 @@ export async function GET(request: NextRequest) {
             claudeMd: null,
             settings: [],
             hooks: [],
-            agents: []
+            agents: [],
+            mcpServers: []
           }
           configData.projects.push(existingProject)
         }
@@ -439,7 +504,8 @@ export async function GET(request: NextRequest) {
             claudeMd: null,
             settings: [],
             hooks: [],
-            agents: []
+            agents: [],
+            mcpServers: []
           }
           configData.projects.push(existingProject)
         }

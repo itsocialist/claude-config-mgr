@@ -13,6 +13,7 @@ async function createWindow() {
     width: 1200,
     height: 800,
     show: false,
+    autoHideMenuBar: true, // Hide menu bar on Windows/Linux
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
