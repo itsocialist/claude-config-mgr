@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="auto-hide-scrollbar">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} auto-hide-scrollbar`}>
         <ThemeProvider
           attribute="class"

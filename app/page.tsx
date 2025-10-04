@@ -314,7 +314,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Fixed Header */}
       <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
         <div className="container mx-auto px-6 py-4 max-w-7xl">
@@ -498,7 +498,7 @@ export default function Dashboard() {
 
             {selectedProfile && (
               <Card className="border-0 shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-t-lg">
+                <CardHeader className="bg-gray-50 dark:bg-slate-800 rounded-t-lg border-b border-gray-200 dark:border-slate-700">
                   <div className="flex justify-between items-center">
                     <div>
                       <CardTitle className="flex items-center gap-2">
@@ -575,7 +575,7 @@ export default function Dashboard() {
 
           <TabsContent value="servers" className="space-y-6">
             <Card className="border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-t-lg">
+              <CardHeader className="bg-gray-50 dark:bg-slate-800 rounded-t-lg border-b border-gray-200 dark:border-slate-700">
                 <CardTitle className="flex items-center gap-2">
                   <Server className="w-6 h-6 text-green-600" />
                   MCP Servers
