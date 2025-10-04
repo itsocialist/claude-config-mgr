@@ -282,9 +282,10 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Check for .mcp.json in project root
+        // Check for .mcp.json in project root (avoid duplicates)
         const mcpPath = path.join(projectPath, '.mcp.json')
-        if (await fileExists(mcpPath)) {
+        const hasMcpAlready = project.settings.some((s: any) => s.name === '.mcp.json')
+        if (!hasMcpAlready && await fileExists(mcpPath)) {
           const content = await fs.readFile(mcpPath, 'utf-8')
           const stat = await fs.stat(mcpPath)
           project.settings.push({

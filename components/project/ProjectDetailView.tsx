@@ -74,13 +74,16 @@ export default function ProjectDetailView({
       case 'instructions':
         return project.claudeMd ? [project.claudeMd] : []
       case 'settings':
-        return project.settings || []
+        // Exclude .mcp.json files from settings tab
+        return project.settings?.filter((s: any) =>
+          s.name !== '.mcp.json'
+        ) || []
       case 'agents':
         return project.agents || []
       case 'mcp':
-        // Parse MCP servers from settings files
+        // Only show .mcp.json files in MCP tab
         return project.settings?.filter((s: any) =>
-          s.name?.includes('mcp') || s.content?.includes('mcpServers')
+          s.name === '.mcp.json'
         ) || []
       case 'hooks':
         return project.hooks || []
