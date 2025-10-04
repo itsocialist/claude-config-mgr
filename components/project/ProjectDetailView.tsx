@@ -315,7 +315,7 @@ export default function ProjectDetailView({
       </div>
 
       {/* Scrollable Content Section */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto auto-hide-scrollbar px-6 py-6 space-y-6">
         {/* Configuration Content */}
         <Card>
           <CardHeader className="sr-only">
@@ -325,7 +325,7 @@ export default function ProjectDetailView({
           <CardContent>
             <div className="grid grid-cols-4 gap-6 h-[600px]">
               {/* File List */}
-              <div className="col-span-1 border rounded-lg p-4 overflow-y-auto">
+              <div className="col-span-1 border rounded-lg p-4 overflow-y-auto auto-hide-scrollbar">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-sm">Files</h3>
                   <Button

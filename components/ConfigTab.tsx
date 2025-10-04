@@ -119,7 +119,7 @@ export default function ConfigTab({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto space-y-4 min-h-0">
+        <CardContent className="flex-1 overflow-y-auto auto-hide-scrollbar space-y-4 min-h-0">
           {/* Global Configuration */}
           {configData && (
             <>

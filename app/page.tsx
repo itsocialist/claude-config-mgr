@@ -542,7 +542,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="bg-slate-50 dark:bg-slate-900 rounded-lg border">
-                    <pre className="p-4 overflow-auto max-h-96 text-sm font-mono">
+                    <pre className="p-4 overflow-auto auto-hide-scrollbar max-h-96 text-sm font-mono">
                       <code className="text-slate-700 dark:text-slate-300">
                         {JSON.stringify(
                           showSensitive ? selectedProfile : selectedProfile.sanitized,
@@ -781,7 +781,7 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-y-auto space-y-4 min-h-0">
+                <CardContent className="flex-1 overflow-y-auto auto-hide-scrollbar space-y-4 min-h-0">
                   <div className="space-y-2">
                     {/* Global Memory */}
                     {configData?.global?.claudeMd && (

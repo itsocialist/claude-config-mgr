@@ -36,7 +36,7 @@ async function createWindow() {
   // - 'hidden': No title bar, window controls on hover (macOS)
   // - 'hiddenInset': No title bar text, but permanent window controls (macOS)
   // - 'frameless': Completely frameless window (no title bar, no controls)
-  const titleBarMode = 'hidden'; // Change this to control title bar visibility
+  const titleBarMode = 'frameless'; // Change this to control title bar visibility
 
   const windowConfig = {
     width: 1200,

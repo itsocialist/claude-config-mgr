@@ -67,3 +67,82 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+  /* Hide scrollbar by default, show on hover/scroll */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar styling for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(203 213 225 / 0.3); /* Light mode: gray-300 with opacity */
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(203 213 225 / 0.5);
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgb(71 85 105 / 0.3); /* Dark mode: gray-600 with opacity */
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgb(71 85 105 / 0.5);
+  }
+
+  /* Auto-hiding scrollbar for main content areas */
+  .auto-hide-scrollbar {
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+
+  .auto-hide-scrollbar:hover {
+    scrollbar-color: rgb(203 213 225 / 0.3) transparent;
+  }
+
+  .dark .auto-hide-scrollbar:hover {
+    scrollbar-color: rgb(71 85 105 / 0.3) transparent;
+  }
+
+  /* For Firefox */
+  .auto-hide-scrollbar {
+    scrollbar-width: thin;
+  }
+
+  .auto-hide-scrollbar:not(:hover) {
+    scrollbar-color: transparent transparent;
+  }
+
+  /* Specific styling for Monaco Editor scrollbars */
+  .monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
+    background: rgb(203 213 225 / 0.3) !important;
+  }
+
+  .dark .monaco-editor .monaco-scrollable-element > .scrollbar > .slider {
+    background: rgb(71 85 105 / 0.3) !important;
+  }
+}
