@@ -5,6 +5,42 @@ All notable changes to Claude Config Manager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-10-06
+
+### Fixed
+- **Critical: Project Discovery**: Fixed major bug where only projects with Claude files were discovered
+  - Now discovers ALL directories in workspace, regardless of Claude file presence
+  - Projects without .claude directories are now properly listed
+- **Critical: Name Overwriting Bug**: Fixed issue where all projects showed as "mcp-config-manager"
+  - Removed duplicate search sections that were overwriting project names
+  - Each project now maintains its unique directory name
+- **Critical: Mac Studio Compatibility**: Fixed issues specific to fresh system installations
+  - Removed hardcoded paths and system-specific logic
+  - Replaced brittle shell commands with pure Node.js filesystem operations
+- **Import Functionality**: Fixed slow/unresponsive import button
+  - Import now correctly adds parent directory to workspace paths
+  - Imported projects maintain correct names
+- **UI Consistency**: Fixed styling inconsistencies across pages
+  - Settings page now matches project dashboard design
+  - Main dashboard uses clean, solid backgrounds without gradients
+  - Fixed sticky header issues with scrollbar changes
+
+### Added
+- **Configurable Title Bar**: Added 4 title bar modes for Electron window
+  - default: Normal title bar
+  - hidden: No title bar, controls on hover (macOS)
+  - hiddenInset: No title bar text, permanent controls (macOS)
+  - frameless: Completely frameless window
+- **Custom Scrollbars**: Auto-hiding scrollbars with custom styling
+  - Scrollbars hide by default, appear on hover/scroll
+  - Consistent styling matching app design
+
+### Technical
+- Removed all shell command dependencies (find, grep, etc.)
+- Implemented pure Node.js recursive filesystem operations
+- Fixed null reference issues with optional projectClaudeDir
+- Improved error handling and logging
+
 ## [0.4.0] - 2025-10-03
 
 ### Added
