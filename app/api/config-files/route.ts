@@ -15,14 +15,22 @@ export async function GET(request: NextRequest) {
     // Get workspace paths from query parameter
     const searchParams = request.nextUrl.searchParams
     const workspacePathsParam = searchParams.get('workspacePaths')
-    let workspacePaths: string[] = [`${homeDir}/workspace`]
+    let workspacePaths: string[] = []
 
     if (workspacePathsParam) {
       try {
-        workspacePaths = JSON.parse(workspacePathsParam)
+        const parsed = JSON.parse(workspacePathsParam)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          workspacePaths = parsed
+        }
       } catch {
-        // Fallback to default
+        // Use empty array if parse fails
       }
+    }
+
+    // If no workspace paths provided, default to home directory
+    if (workspacePaths.length === 0) {
+      workspacePaths = [homeDir]
     }
 
     const configData = {

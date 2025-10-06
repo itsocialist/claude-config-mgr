@@ -13,7 +13,7 @@ import { showToast } from '@/components/StatusBar'
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const [projectPaths, setProjectPaths] = React.useState<string[]>(['~/workspace'])
+  const [projectPaths, setProjectPaths] = React.useState<string[]>([])
   const [newPath, setNewPath] = React.useState('')
   const [mounted, setMounted] = React.useState(false)
 
@@ -25,10 +25,16 @@ export default function SettingsPage() {
     if (savedPaths) {
       try {
         const paths = JSON.parse(savedPaths)
-        setProjectPaths(Array.isArray(paths) ? paths : ['~/workspace'])
+        if (Array.isArray(paths) && paths.length > 0) {
+          setProjectPaths(paths)
+        } else {
+          setProjectPaths(['~']) // Default to home directory
+        }
       } catch {
-        setProjectPaths(['~/workspace'])
+        setProjectPaths(['~']) // Default to home directory
       }
+    } else {
+      setProjectPaths(['~']) // Default to home directory if nothing saved
     }
   }, [])
 

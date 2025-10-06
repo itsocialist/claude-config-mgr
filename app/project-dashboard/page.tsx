@@ -94,7 +94,7 @@ export default function ProjectDashboard() {
 
       // Get workspace paths from localStorage
       const savedPaths = localStorage.getItem('workspacePaths')
-      let workspacePaths = ['~/workspace']
+      let workspacePaths: string[] = []
       if (savedPaths) {
         try {
           const parsed = JSON.parse(savedPaths)
@@ -102,8 +102,14 @@ export default function ProjectDashboard() {
             workspacePaths = parsed
           }
         } catch {
-          // Use default
+          // Use empty array if parse fails
         }
+      }
+
+      // If no workspace paths saved, use home directory as default
+      // This will at least show projects in user's home folder
+      if (workspacePaths.length === 0) {
+        workspacePaths = ['~']
       }
 
       // Fetch global config
@@ -246,7 +252,7 @@ export default function ProjectDashboard() {
     try {
       // Get current workspace paths
       const savedPaths = localStorage.getItem('workspacePaths')
-      let workspacePaths = ['~/workspace']
+      let workspacePaths: string[] = []
       if (savedPaths) {
         try {
           const parsed = JSON.parse(savedPaths)
@@ -254,13 +260,18 @@ export default function ProjectDashboard() {
             workspacePaths = parsed
           }
         } catch {
-          // Use default
+          // Use empty array if parse fails
         }
       }
 
-      // Add the new project path if not already included
-      if (!workspacePaths.includes(projectPath)) {
-        workspacePaths.push(projectPath)
+      // Get the parent directory of the project (this is the workspace)
+      // Use string manipulation since we're in client-side code
+      const lastSlash = projectPath.lastIndexOf('/')
+      const parentDir = lastSlash > 0 ? projectPath.substring(0, lastSlash) : projectPath
+
+      // Add the parent directory as a workspace path if not already included
+      if (parentDir && !workspacePaths.includes(parentDir)) {
+        workspacePaths.push(parentDir)
         localStorage.setItem('workspacePaths', JSON.stringify(workspacePaths))
       }
 
