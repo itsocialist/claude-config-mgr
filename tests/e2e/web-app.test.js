@@ -192,34 +192,60 @@ describe('Claude Config Manager Web E2E Tests', () => {
   })
 
   describe('Dark Mode', () => {
-    test.skip('should have dark mode toggle on settings page', async () => {
+    test('should have working theme selector', async () => {
       await page.goto('http://localhost:3002/settings', {
         waitUntil: 'networkidle0'
       })
 
-      // Check that we can detect dark mode state
-      const hasDarkClass = await page.evaluate(() => {
-        return document.documentElement.classList.contains('dark') !== undefined
-      })
+      // Wait for the theme selector to be present
+      await page.waitForSelector('button[role="combobox"]', { timeout: 5000 })
 
-      expect(hasDarkClass).toBe(true)
+      // Get initial theme value
+      const initialTheme = await page.$eval('button[role="combobox"]', el => el.textContent?.trim())
+      console.log('Initial theme:', initialTheme)
 
-      // Find theme toggle button
-      let themeButtonFound = false
-      const toggleButtons = await page.$$('button')
-      for (const button of toggleButtons) {
-        const ariaLabel = await page.evaluate(el => el.getAttribute('aria-label'), button)
-        const svgIcon = await page.evaluate(el => el.querySelector('svg'), button)
-        if ((ariaLabel && ariaLabel.toLowerCase().includes('theme')) || svgIcon) {
-          themeButtonFound = true
-          // Click to test it's interactive
-          await button.click().catch(() => {})
+      // Click the Select trigger to open dropdown
+      await page.click('button[role="combobox"]')
+
+      // Wait for dropdown to appear
+      await page.waitForSelector('[role="option"]', { timeout: 3000 })
+
+      // Get all theme options
+      const themeOptions = await page.$$eval('[role="option"]', options =>
+        options.map(opt => opt.textContent?.trim())
+      )
+
+      console.log('Available theme options:', themeOptions)
+
+      // Should have Light, Dark, and System options
+      expect(themeOptions).toEqual(expect.arrayContaining(['Light', 'Dark', 'System']))
+
+      // Click on a different theme option
+      const targetTheme = initialTheme?.includes('Dark') ? 'Light' : 'Dark'
+      const options = await page.$$('[role="option"]')
+      for (const option of options) {
+        const text = await page.evaluate(el => el.textContent?.trim(), option)
+        if (text === targetTheme) {
+          await option.click()
           break
         }
       }
 
-      // We should have found a theme toggle
-      expect(themeButtonFound).toBe(true)
+      // Wait for theme change to apply
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Verify theme changed in DOM
+      const htmlClass = await page.$eval('html', el => el.className)
+      if (targetTheme === 'Dark') {
+        expect(htmlClass).toContain('dark')
+      } else if (targetTheme === 'Light') {
+        expect(htmlClass).not.toContain('dark')
+      }
+
+      // Verify the Select shows the new value
+      const newTheme = await page.$eval('button[role="combobox"]', el => el.textContent?.trim())
+      console.log('New theme:', newTheme)
+      expect(newTheme).toBe(targetTheme)
     })
   })
 })
