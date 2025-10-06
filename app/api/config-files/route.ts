@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-
-const execAsync = promisify(exec)
 
 // Recursive function to find .claude directories using Node.js fs
 async function findClaudeDirsRecursive(dir: string, maxDepth: number, currentDepth = 0): Promise<string[]> {
@@ -65,6 +61,49 @@ async function findFilesRecursive(dir: string, filename: string, maxDepth: numbe
         if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') continue
 
         const subResults = await findFilesRecursive(fullPath, filename, maxDepth, currentDepth + 1)
+        results.push(...subResults)
+      }
+    }
+  } catch (error) {
+    // Silently skip directories we can't read
+  }
+
+  return results
+}
+
+// Recursive function to find agent files in agents directories
+async function findAgentFilesRecursive(dir: string, maxDepth: number, currentDepth = 0): Promise<string[]> {
+  if (currentDepth >= maxDepth) return []
+
+  const results: string[] = []
+
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name)
+
+      // If this is an 'agents' directory, look for agent files inside
+      if (entry.isDirectory() && entry.name === 'agents') {
+        try {
+          const agentEntries = await fs.readdir(fullPath, { withFileTypes: true })
+          for (const agentEntry of agentEntries) {
+            if (agentEntry.isFile() && (agentEntry.name.endsWith('.md') || agentEntry.name.endsWith('.json'))) {
+              results.push(path.join(fullPath, agentEntry.name))
+            }
+          }
+        } catch {
+          // Skip if can't read agents directory
+        }
+      }
+
+      // Recursively search subdirectories
+      if (entry.isDirectory()) {
+        // Skip hidden directories and common non-project directories
+        if (entry.name.startsWith('.')) continue
+        if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') continue
+
+        const subResults = await findAgentFilesRecursive(fullPath, maxDepth, currentDepth + 1)
         results.push(...subResults)
       }
     }
@@ -170,9 +209,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Find project-scoped Claude configurations
+    // Find project-scoped Claude configurations using Node.js fs
     try {
-      // Search for .claude directories in all workspace paths (limit depth to avoid long searches)
       const projectDirs: string[] = []
       for (const workspacePath of workspacePaths) {
         const expandedPath = workspacePath.replace(/^~/, homeDir)
@@ -180,32 +218,19 @@ export async function GET(request: NextRequest) {
         // Check if the path exists before trying to search it
         try {
           await fs.access(expandedPath)
+          console.log(`Searching for projects in: ${expandedPath}`)
         } catch (error) {
-          console.error(`Workspace path does not exist: ${expandedPath}`)
+          console.log(`Workspace path does not exist, skipping: ${expandedPath}`)
           continue
         }
 
+        // Use Node.js fs to search for .claude directories
         try {
-          // Use a more compatible find command without 2>/dev/null
-          const { stdout, stderr } = await execAsync(`find "${expandedPath}" -maxdepth 3 -name ".claude" -type d | head -20`)
-
-          if (stderr) {
-            console.error(`Find command stderr for ${expandedPath}:`, stderr)
-          }
-
-          const dirs = stdout.trim().split('\n').filter(Boolean)
+          const dirs = await findClaudeDirsRecursive(expandedPath, 3)
           projectDirs.push(...dirs)
           console.log(`Found ${dirs.length} .claude directories in ${expandedPath}`)
-        } catch (error: any) {
-          console.error(`Error searching in ${expandedPath}:`, error.message || error)
-          // Try alternative method using fs.readdir recursively
-          try {
-            const dirs = await findClaudeDirsRecursive(expandedPath, 3)
-            projectDirs.push(...dirs)
-            console.log(`Found ${dirs.length} .claude directories using fallback method`)
-          } catch (fallbackError) {
-            console.error(`Fallback search also failed:`, fallbackError)
-          }
+        } catch (error) {
+          console.error(`Error searching in ${expandedPath}:`, error)
         }
       }
 
@@ -421,7 +446,7 @@ export async function GET(request: NextRequest) {
       console.error('Error searching for project configurations:', error)
     }
 
-    // Also check for .mcp.json files in projects
+    // Also check for .mcp.json files in projects using Node.js fs
     try {
       const mcpFiles: string[] = []
       for (const workspacePath of workspacePaths) {
@@ -434,22 +459,13 @@ export async function GET(request: NextRequest) {
           continue
         }
 
+        // Use Node.js fs to search for .mcp.json files
         try {
-          const { stdout, stderr } = await execAsync(`find "${expandedPath}" -maxdepth 3 -name ".mcp.json" -type f | head -20`)
-          if (stderr) {
-            console.error(`Find MCP stderr:`, stderr)
-          }
-          const files = stdout.trim().split('\n').filter(Boolean)
+          const files = await findFilesRecursive(expandedPath, '.mcp.json', 3)
           mcpFiles.push(...files)
-        } catch (error: any) {
-          console.error(`Error searching for MCP files in ${expandedPath}:`, error.message)
-          // Fallback to recursive search
-          try {
-            const files = await findFilesRecursive(expandedPath, '.mcp.json', 3)
-            mcpFiles.push(...files)
-          } catch (fallbackError) {
-            console.error(`Fallback MCP search failed:`, fallbackError)
-          }
+          console.log(`Found ${files.length} .mcp.json files in ${expandedPath}`)
+        } catch (error) {
+          console.error(`Error searching for MCP files in ${expandedPath}:`, error)
         }
       }
 
@@ -517,7 +533,7 @@ export async function GET(request: NextRequest) {
       console.error('Error searching for MCP files:', error)
     }
 
-    // Also search for standalone CLAUDE.md files in workspace projects
+    // Also search for standalone CLAUDE.md files in workspace projects using Node.js fs
     try {
       const claudeMdFiles: string[] = []
       for (const workspacePath of workspacePaths) {
@@ -530,22 +546,13 @@ export async function GET(request: NextRequest) {
           continue
         }
 
+        // Use Node.js fs to search for CLAUDE.md files
         try {
-          const { stdout, stderr } = await execAsync(`find "${expandedPath}" -maxdepth 2 -name "CLAUDE.md" -type f | head -30`)
-          if (stderr) {
-            console.error(`Find CLAUDE.md stderr:`, stderr)
-          }
-          const files = stdout.trim().split('\n').filter(Boolean)
+          const files = await findFilesRecursive(expandedPath, 'CLAUDE.md', 2)
           claudeMdFiles.push(...files)
-        } catch (error: any) {
-          console.error(`Error searching for CLAUDE.md in ${expandedPath}:`, error.message)
-          // Fallback to recursive search
-          try {
-            const files = await findFilesRecursive(expandedPath, 'CLAUDE.md', 2)
-            claudeMdFiles.push(...files)
-          } catch (fallbackError) {
-            console.error(`Fallback CLAUDE.md search failed:`, fallbackError)
-          }
+          console.log(`Found ${files.length} CLAUDE.md files in ${expandedPath}`)
+        } catch (error) {
+          console.error(`Error searching for CLAUDE.md in ${expandedPath}:`, error)
         }
       }
 
@@ -597,15 +604,24 @@ export async function GET(request: NextRequest) {
       console.error('Error searching for CLAUDE.md files:', error)
     }
 
-    // Also search for standalone agent files in workspace projects
+    // Also search for standalone agent files in workspace projects using Node.js fs
     try {
       const agentFiles: string[] = []
       for (const workspacePath of workspacePaths) {
         const expandedPath = workspacePath.replace(/^~/, homeDir)
+
+        // Check if path exists
         try {
-          const { stdout } = await execAsync(`find "${expandedPath}" -maxdepth 3 -path "*/agents/*.md" -o -path "*/agents/*.json" 2>/dev/null | head -50`)
-          const files = stdout.trim().split('\n').filter(Boolean)
+          await fs.access(expandedPath)
+        } catch {
+          continue
+        }
+
+        // Use Node.js fs to search for agent files
+        try {
+          const files = await findAgentFilesRecursive(expandedPath, 3)
           agentFiles.push(...files)
+          console.log(`Found ${files.length} agent files in ${expandedPath}`)
         } catch (error) {
           console.error(`Error searching for agent files in ${expandedPath}:`, error)
         }
