@@ -209,55 +209,70 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Find project-scoped Claude configurations using Node.js fs
+    // Find ALL projects in workspace directories, not just those with Claude files
+    // This ensures we discover all projects, then check for Claude configurations
     try {
-      const projectDirs: string[] = []
+      const allProjects = new Map<string, any>() // Use Map to avoid duplicates by path
+
       for (const workspacePath of workspacePaths) {
         const expandedPath = workspacePath.replace(/^~/, homeDir)
 
-        // Check if the path exists before trying to search it
+        // Check if the path exists
         try {
           await fs.access(expandedPath)
-          console.log(`Searching for projects in: ${expandedPath}`)
+          console.log(`Discovering all projects in: ${expandedPath}`)
         } catch (error) {
           console.log(`Workspace path does not exist, skipping: ${expandedPath}`)
           continue
         }
 
-        // Use Node.js fs to search for .claude directories
+        // Get ALL directories in the workspace (depth 1 - immediate subdirectories)
         try {
-          const dirs = await findClaudeDirsRecursive(expandedPath, 3)
-          projectDirs.push(...dirs)
-          console.log(`Found ${dirs.length} .claude directories in ${expandedPath}`)
+          const entries = await fs.readdir(expandedPath, { withFileTypes: true })
+
+          for (const entry of entries) {
+            if (!entry.isDirectory()) continue
+
+            // Skip hidden directories and common non-project directories
+            if (entry.name.startsWith('.')) continue
+            if (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') continue
+
+            const projectPath = path.join(expandedPath, entry.name)
+
+            // Skip if we already have this project
+            if (allProjects.has(projectPath)) continue
+
+            // Create project entry for EVERY directory
+            const project: any = {
+              name: entry.name,
+              path: projectPath,
+              claudeDir: null,
+              claudeMd: null,
+              settings: [],
+              hooks: [],
+              agents: [],
+              mcpServers: []
+            }
+
+            // Check if this project has a .claude directory
+            const claudeDirPath = path.join(projectPath, '.claude')
+            if (await fileExists(claudeDirPath)) {
+              project.claudeDir = claudeDirPath
+            }
+
+            allProjects.set(projectPath, project)
+          }
+
+          console.log(`Found ${allProjects.size} total projects in ${expandedPath}`)
         } catch (error) {
-          console.error(`Error searching in ${expandedPath}:`, error)
+          console.error(`Error reading directory ${expandedPath}:`, error)
         }
       }
 
-      for (const projectClaudeDir of projectDirs) {
-        const projectPath = path.dirname(projectClaudeDir)
-        let projectName = path.basename(projectPath)
-
-        // Avoid using hidden directories as project names
-        if (projectName.startsWith('.')) {
-          // Try to use parent directory name
-          const parentPath = path.dirname(projectPath)
-          const parentName = path.basename(parentPath)
-          if (parentName && !parentName.startsWith('.')) {
-            projectName = parentName
-          }
-        }
-
-        const project: any = {
-          name: projectName,
-          path: projectPath,
-          claudeDir: projectClaudeDir,
-          claudeMd: null,
-          settings: [],
-          hooks: [],
-          agents: [],
-          mcpServers: []
-        }
+      // Now process each discovered project to add Claude configurations
+      for (const project of allProjects.values()) {
+        const projectPath = project.path
+        const projectClaudeDir = project.claudeDir
 
         // Check for project CLAUDE.md files following the proper convention:
         // 1. Project scope: CLAUDE.md in project root (primary location)
@@ -276,7 +291,7 @@ export async function GET(request: NextRequest) {
             lastModified: stat.mtime,
             scope: 'project'
           }
-        } else {
+        } else if (projectClaudeDir) {
           // Legacy location: .claude directory
           const legacyClaudeMdPath = path.join(projectClaudeDir, 'CLAUDE.md')
           if (await fileExists(legacyClaudeMdPath)) {
@@ -306,107 +321,109 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Check for project settings files
-        const projectSettingsFiles = [
-          'settings.local.json',
-          'settings.json',
-          'config.json'
-        ]
+        // Check for project settings files (only if .claude directory exists)
+        if (projectClaudeDir) {
+          const projectSettingsFiles = [
+            'settings.local.json',
+            'settings.json',
+            'config.json'
+          ]
 
-        for (const file of projectSettingsFiles) {
-          const filePath = path.join(projectClaudeDir, file)
-          if (await fileExists(filePath)) {
-            const content = await fs.readFile(filePath, 'utf-8')
-            const stat = await fs.stat(filePath)
-            project.settings.push({
-              name: file,
-              path: filePath,
-              content,
-              size: stat.size,
-              lastModified: stat.mtime,
-              type: 'json'
-            })
-
-            // Check if this settings file contains MCP servers
-            try {
-              const settingsData = JSON.parse(content)
-              if (settingsData.mcpServers) {
-                for (const [serverName, serverConfig] of Object.entries(settingsData.mcpServers)) {
-                  project.mcpServers.push({
-                    name: serverName,
-                    source: file,
-                    ...serverConfig as any
-                  })
-                }
-              }
-            } catch (error) {
-              // Silent fail for non-JSON or invalid format
-            }
-          }
-        }
-
-        // Check for hooks in settings.json
-        const settingsPath = path.join(projectClaudeDir, 'settings.json')
-        if (await fileExists(settingsPath)) {
-          try {
-            const settingsContent = await fs.readFile(settingsPath, 'utf-8')
-            const settings = JSON.parse(settingsContent)
-            if (settings.hooks) {
-              const stat = await fs.stat(settingsPath)
-              project.hooks.push({
-                name: 'hooks (in settings.json)',
-                path: settingsPath,
-                size: stat.size,
-                lastModified: stat.mtime,
-                content: JSON.stringify(settings.hooks, null, 2)
-              })
-            }
-          } catch (error) {
-            console.error('Error parsing settings.json for hooks:', error)
-          }
-        }
-
-        // Check for project agents
-        const projectAgentsDir = path.join(projectClaudeDir, 'agents')
-        if (await fileExists(projectAgentsDir)) {
-          const agentFiles = await fs.readdir(projectAgentsDir)
-          for (const file of agentFiles) {
-            if (file.endsWith('.md') || file.endsWith('.json')) {
-              const filePath = path.join(projectAgentsDir, file)
+          for (const file of projectSettingsFiles) {
+            const filePath = path.join(projectClaudeDir, file)
+            if (await fileExists(filePath)) {
               const content = await fs.readFile(filePath, 'utf-8')
               const stat = await fs.stat(filePath)
-              project.agents.push({
+              project.settings.push({
                 name: file,
                 path: filePath,
                 content,
                 size: stat.size,
                 lastModified: stat.mtime,
-                type: file.endsWith('.md') ? 'markdown' : 'json'
+                type: 'json'
               })
-            }
-          }
-        }
 
-        // Check for custom commands
-        const commandsDir = path.join(projectClaudeDir, 'commands')
-        if (await fileExists(commandsDir)) {
-          if (!project.commands) project.commands = []
-          const commandFiles = await fs.readdir(commandsDir)
-          for (const file of commandFiles) {
-            if (file.endsWith('.md')) {
-              const filePath = path.join(commandsDir, file)
-              const content = await fs.readFile(filePath, 'utf-8')
-              const stat = await fs.stat(filePath)
-              project.commands.push({
-                name: file.replace('.md', ''), // Command name without extension
-                path: filePath,
-                content,
-                size: stat.size,
-                lastModified: stat.mtime
-              })
+              // Check if this settings file contains MCP servers
+              try {
+                const settingsData = JSON.parse(content)
+                if (settingsData.mcpServers) {
+                  for (const [serverName, serverConfig] of Object.entries(settingsData.mcpServers)) {
+                    project.mcpServers.push({
+                      name: serverName,
+                      source: file,
+                      ...serverConfig as any
+                    })
+                  }
+                }
+              } catch (error) {
+                // Silent fail for non-JSON or invalid format
+              }
             }
           }
-        }
+
+          // Check for hooks in settings.json
+          const settingsPath = path.join(projectClaudeDir, 'settings.json')
+          if (await fileExists(settingsPath)) {
+            try {
+              const settingsContent = await fs.readFile(settingsPath, 'utf-8')
+              const settings = JSON.parse(settingsContent)
+              if (settings.hooks) {
+                const stat = await fs.stat(settingsPath)
+                project.hooks.push({
+                  name: 'hooks (in settings.json)',
+                  path: settingsPath,
+                  size: stat.size,
+                  lastModified: stat.mtime,
+                  content: JSON.stringify(settings.hooks, null, 2)
+                })
+              }
+            } catch (error) {
+              console.error('Error parsing settings.json for hooks:', error)
+            }
+          }
+
+          // Check for project agents
+          const projectAgentsDir = path.join(projectClaudeDir, 'agents')
+          if (await fileExists(projectAgentsDir)) {
+            const agentFiles = await fs.readdir(projectAgentsDir)
+            for (const file of agentFiles) {
+              if (file.endsWith('.md') || file.endsWith('.json')) {
+                const filePath = path.join(projectAgentsDir, file)
+                const content = await fs.readFile(filePath, 'utf-8')
+                const stat = await fs.stat(filePath)
+                project.agents.push({
+                  name: file,
+                  path: filePath,
+                  content,
+                  size: stat.size,
+                  lastModified: stat.mtime,
+                  type: file.endsWith('.md') ? 'markdown' : 'json'
+                })
+              }
+            }
+          }
+
+          // Check for custom commands
+          const commandsDir = path.join(projectClaudeDir, 'commands')
+          if (await fileExists(commandsDir)) {
+            if (!project.commands) project.commands = []
+            const commandFiles = await fs.readdir(commandsDir)
+            for (const file of commandFiles) {
+              if (file.endsWith('.md')) {
+                const filePath = path.join(commandsDir, file)
+                const content = await fs.readFile(filePath, 'utf-8')
+                const stat = await fs.stat(filePath)
+                project.commands.push({
+                  name: file.replace('.md', ''), // Command name without extension
+                  path: filePath,
+                  content,
+                  size: stat.size,
+                  lastModified: stat.mtime
+                })
+              }
+            }
+          }
+        } // Close the if (projectClaudeDir) block
 
         // Check for .mcp.json in project root (avoid duplicates)
         const mcpPath = path.join(projectPath, '.mcp.json')
@@ -444,249 +461,6 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error('Error searching for project configurations:', error)
-    }
-
-    // Also check for .mcp.json files in projects using Node.js fs
-    try {
-      const mcpFiles: string[] = []
-      for (const workspacePath of workspacePaths) {
-        const expandedPath = workspacePath.replace(/^~/, homeDir)
-
-        // Check if path exists
-        try {
-          await fs.access(expandedPath)
-        } catch {
-          continue
-        }
-
-        // Use Node.js fs to search for .mcp.json files
-        try {
-          const files = await findFilesRecursive(expandedPath, '.mcp.json', 3)
-          mcpFiles.push(...files)
-          console.log(`Found ${files.length} .mcp.json files in ${expandedPath}`)
-        } catch (error) {
-          console.error(`Error searching for MCP files in ${expandedPath}:`, error)
-        }
-      }
-
-      for (const mcpPath of mcpFiles) {
-        const projectPath = path.dirname(mcpPath)
-        let projectName = path.basename(projectPath)
-
-        // Avoid using hidden directories as project names
-        if (projectName.startsWith('.')) {
-          // Try to use parent directory name
-          const parentPath = path.dirname(projectPath)
-          const parentName = path.basename(parentPath)
-          if (parentName && !parentName.startsWith('.')) {
-            projectName = parentName
-          }
-        }
-
-        // Check if we already have this project
-        let project = configData.projects.find(p => p.path === projectPath)
-        if (!project) {
-          project = {
-            name: projectName,
-            path: projectPath,
-            claudeDir: null,
-            claudeMd: null,
-            settings: [],
-            hooks: [],
-            agents: [],
-            mcpServers: []
-          }
-          configData.projects.push(project)
-        }
-
-        // Add MCP file to settings and parse MCP servers (avoid duplicates)
-        const hasMcpAlready = project.settings.some((s: any) => s.name === '.mcp.json')
-        if (!hasMcpAlready) {
-          const content = await fs.readFile(mcpPath, 'utf-8')
-          const stat = await fs.stat(mcpPath)
-          project.settings.push({
-            name: '.mcp.json',
-            path: mcpPath,
-            content,
-            size: stat.size,
-            lastModified: stat.mtime,
-            type: 'json'
-          })
-
-          // Parse and add MCP servers
-          try {
-            const mcpConfig = JSON.parse(content)
-            if (mcpConfig.mcpServers) {
-              for (const [serverName, serverConfig] of Object.entries(mcpConfig.mcpServers)) {
-                project.mcpServers.push({
-                  name: serverName,
-                  ...serverConfig as any
-                })
-              }
-            }
-          } catch (error) {
-            console.error('Error parsing MCP config:', error)
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error searching for MCP files:', error)
-    }
-
-    // Also search for standalone CLAUDE.md files in workspace projects using Node.js fs
-    try {
-      const claudeMdFiles: string[] = []
-      for (const workspacePath of workspacePaths) {
-        const expandedPath = workspacePath.replace(/^~/, homeDir)
-
-        // Check if path exists
-        try {
-          await fs.access(expandedPath)
-        } catch {
-          continue
-        }
-
-        // Use Node.js fs to search for CLAUDE.md files
-        try {
-          const files = await findFilesRecursive(expandedPath, 'CLAUDE.md', 2)
-          claudeMdFiles.push(...files)
-          console.log(`Found ${files.length} CLAUDE.md files in ${expandedPath}`)
-        } catch (error) {
-          console.error(`Error searching for CLAUDE.md in ${expandedPath}:`, error)
-        }
-      }
-
-      for (const claudeMdPath of claudeMdFiles) {
-        const projectPath = path.dirname(claudeMdPath)
-        let projectName = path.basename(projectPath)
-
-        // Avoid using hidden directories as project names
-        if (projectName.startsWith('.')) {
-          // Try to use parent directory name
-          const parentPath = path.dirname(projectPath)
-          const parentName = path.basename(parentPath)
-          if (parentName && !parentName.startsWith('.')) {
-            projectName = parentName
-          }
-        }
-
-        // Skip if we already have this project from .claude directory search
-        let existingProject = configData.projects.find(p => p.path === projectPath)
-
-        if (!existingProject) {
-          // Create new project entry
-          existingProject = {
-            name: projectName,
-            path: projectPath,
-            claudeDir: null,
-            claudeMd: null,
-            settings: [],
-            hooks: [],
-            agents: [],
-            mcpServers: []
-          }
-          configData.projects.push(existingProject)
-        }
-
-        // Add CLAUDE.md if not already set
-        if (!existingProject.claudeMd) {
-          const content = await fs.readFile(claudeMdPath, 'utf-8')
-          const stat = await fs.stat(claudeMdPath)
-          existingProject.claudeMd = {
-            path: claudeMdPath,
-            content,
-            size: stat.size,
-            lastModified: stat.mtime
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error searching for CLAUDE.md files:', error)
-    }
-
-    // Also search for standalone agent files in workspace projects using Node.js fs
-    try {
-      const agentFiles: string[] = []
-      for (const workspacePath of workspacePaths) {
-        const expandedPath = workspacePath.replace(/^~/, homeDir)
-
-        // Check if path exists
-        try {
-          await fs.access(expandedPath)
-        } catch {
-          continue
-        }
-
-        // Use Node.js fs to search for agent files
-        try {
-          const files = await findAgentFilesRecursive(expandedPath, 3)
-          agentFiles.push(...files)
-          console.log(`Found ${files.length} agent files in ${expandedPath}`)
-        } catch (error) {
-          console.error(`Error searching for agent files in ${expandedPath}:`, error)
-        }
-      }
-
-      for (const agentPath of agentFiles) {
-        // Extract project path from agent file path
-        // Pattern: /path/to/project/agents/agent.md -> /path/to/project
-        const agentsDir = path.dirname(agentPath)
-        const projectPath = path.dirname(agentsDir)
-        let projectName = path.basename(projectPath)
-
-        // Avoid using hidden directories as project names
-        if (projectName.startsWith('.')) {
-          // Try to use parent directory name
-          const parentPath = path.dirname(projectPath)
-          const parentName = path.basename(parentPath)
-          if (parentName && !parentName.startsWith('.')) {
-            projectName = parentName
-          }
-        }
-
-        // Skip if this is global agents directory
-        if (projectPath === path.join(require('os').homedir(), '.claude')) {
-          continue
-        }
-
-        // Find or create project entry
-        let existingProject = configData.projects.find(p => p.path === projectPath)
-
-        if (!existingProject) {
-          // Create new project entry
-          existingProject = {
-            name: projectName,
-            path: projectPath,
-            claudeDir: null,
-            claudeMd: null,
-            settings: [],
-            hooks: [],
-            agents: [],
-            mcpServers: []
-          }
-          configData.projects.push(existingProject)
-        }
-
-        // Check if agent already exists (avoid duplicates)
-        const agentExists = existingProject.agents.some((agent: any) => agent.path === agentPath)
-
-        if (!agentExists) {
-          const content = await fs.readFile(agentPath, 'utf-8')
-          const stat = await fs.stat(agentPath)
-          const fileName = path.basename(agentPath)
-
-          existingProject.agents.push({
-            name: fileName,
-            path: agentPath,
-            content,
-            size: stat.size,
-            lastModified: stat.mtime,
-            type: fileName.endsWith('.md') ? 'markdown' : 'json'
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error searching for agent files:', error)
     }
 
     return NextResponse.json(configData)
