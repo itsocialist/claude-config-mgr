@@ -102,14 +102,14 @@ export default function ProjectDashboard() {
             workspacePaths = parsed
           }
         } catch {
-          // Use empty array if parse fails
+          // Use default workspace
+          workspacePaths = ['~/workspace']
         }
       }
 
-      // If no workspace paths saved, use home directory as default
-      // This will at least show projects in user's home folder
+      // If no workspace paths saved, use default workspace
       if (workspacePaths.length === 0) {
-        workspacePaths = ['~']
+        workspacePaths = ['~/workspace']
       }
 
       // Fetch global config

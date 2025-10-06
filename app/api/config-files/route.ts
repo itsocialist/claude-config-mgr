@@ -24,13 +24,14 @@ export async function GET(request: NextRequest) {
           workspacePaths = parsed
         }
       } catch {
-        // Use empty array if parse fails
+        // Use default workspace if parse fails
+        workspacePaths = [`${homeDir}/workspace`]
       }
     }
 
-    // If no workspace paths provided, default to home directory
+    // If no workspace paths provided, default to ~/workspace
     if (workspacePaths.length === 0) {
-      workspacePaths = [homeDir]
+      workspacePaths = [`${homeDir}/workspace`]
     }
 
     const configData = {

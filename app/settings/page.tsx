@@ -28,13 +28,13 @@ export default function SettingsPage() {
         if (Array.isArray(paths) && paths.length > 0) {
           setProjectPaths(paths)
         } else {
-          setProjectPaths(['~']) // Default to home directory
+          setProjectPaths(['~/workspace']) // Default workspace
         }
       } catch {
-        setProjectPaths(['~']) // Default to home directory
+        setProjectPaths(['~/workspace']) // Default workspace
       }
     } else {
-      setProjectPaths(['~']) // Default to home directory if nothing saved
+      setProjectPaths(['~/workspace']) // Default workspace if nothing saved
     }
   }, [])
 
